@@ -2,9 +2,9 @@ name: Python code analysis
 
 on:
     push:
-        branches: [ ga/analysis ]
+        branches: [ main ]
     pull_request:
-        branches: [ ga/analysis ]
+        branches: [ main ]
 
 jobs:
     build:
