@@ -22,7 +22,7 @@ jobs:
                     pip install -e .
             - name: Run pylint
               run: |
-                  pylint --config pyproject.toml nlp_research
+                  pylint --rcfile pyproject.toml nlp_research
             - name: Run pycodestyle
               run: |
                    pycodestyle --config pyproject.toml nlp_research

@@ -4,8 +4,7 @@ description = "NLP Research"
 readme = "README.md"
 version = "0.0.0"
 authors = [
-    { name = "Jakub Kubiak", email = "kubiak.jakub01@gmail.com" }
-]
+    { name = "Jakub Kubiak", email = "kubiak.jakub01@gmail.com" }]
 requires-python = ">=3.10.0"
 dependencies = [
     "torch==2.0.1",
@@ -15,13 +14,11 @@ dependencies = [
     "datasets==2.14.5",
     "pylint==2.17.5",
     "pycodestyle==2.11.0",
-    "mypy==1.5.1"
-]
+    "mypy==1.5.1"]
 classifiers = [
     "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Natural Language Processing",
-]
+    "Topic :: Scientific/Engineering :: Natural Language Processing",]
 
 [tool.pylint]
 max-line-length = 120
