@@ -22,4 +22,10 @@ jobs:
                     pip install -e .
             - name: Run pylint
               run: |
-                  pylint --fail-under=10.0 --exit-zero nlp_research
+                  pylint --config pyproject.toml nlp_research
+            - name: Run pycodestyle
+              run: |
+                   pycodestyle --config pyproject.toml nlp_research
+            - name: Run mypy
+              run: |
+                    mypy --config pyproject.toml nlp_research
