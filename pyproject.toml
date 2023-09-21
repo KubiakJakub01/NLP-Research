@@ -14,6 +14,8 @@ dependencies = [
     "transformers==4.33.2",
     "datasets==2.14.5",
     "pylint==2.17.5",
+    "pycodestyle==2.11.0",
+    "mypy==1.5.1"
 ]
 classifiers = [
     "Programming Language :: Python :: 3.10",
