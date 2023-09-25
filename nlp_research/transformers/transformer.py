@@ -7,7 +7,7 @@ from torch import Tensor
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from einops import rearrange, repeat
 
 
 class MultiHeadAttention(nn.Module):
@@ -49,3 +49,39 @@ class MultiHeadAttention(nn.Module):
         x, _ = self.attn(q, k, v, attn_mask=attn_mask, key_padding_mask=pad_mask)
 
         return self.dropout(self.to_out(x))
+
+
+class PositionWiseFeedForward(nn.Module):
+    '''Position-wise feed-forward layer.'''
+
+    def __init__(self, d_model, d_ff, dropout_rate=0.1):
+        '''Initialize the class.
+        Args:
+            d_model: The dimensionality of input and output.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+        '''
+        super(PositionWiseFeedForward, self).__init__()
+
+        self.d_model = d_model
+        self.d_ff = d_ff
+
+        self.ff = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(dropout_rate)
+        )
+
+    def forward(self, x):
+        '''Forward of the position-wise feed-forward layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        return self.ff(x)
