@@ -85,3 +85,44 @@ class PositionWiseFeedForward(nn.Module):
         '''
         # (batch_size, seq_len, d_model)
         return self.ff(x)
+
+
+class EncoderLayer(nn.Module):
+    '''Encoder layer.'''
+
+    def __init__(self, d_model, n_heads, d_ff, dropout_rate=0.1):
+        '''Initialize the class.
+        Args:
+            d_model: The dimensionality of input and output.
+            n_heads: The number of heads.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+        '''
+        super(EncoderLayer, self).__init__()
+
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+
+        self.attn = MultiHeadAttention(d_model, n_heads, dropout_rate)
+        self.ff = PositionWiseFeedForward(d_model, d_ff, dropout_rate)
+        self.ln1 = nn.LayerNorm(d_model)
+        self.ln2 = nn.LayerNorm(d_model)
+
+    def forward(self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+        '''Forward of the encoder layer.
+
+        Args:
+            x: Input tensor.
+            attn_mask: Attention mask.
+            pad_mask: Padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        x = x + self.attn(self.ln1(x), attn_mask, pad_mask)
+        # (batch_size, seq_len, d_model)
+        x = x + self.ff(self.ln2(x))
+
+        return x
