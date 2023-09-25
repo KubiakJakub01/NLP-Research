@@ -126,3 +126,49 @@ class EncoderLayer(nn.Module):
         x = x + self.ff(self.ln2(x))
 
         return x
+
+
+class DecoderLayer(nn.Module):
+    '''Decoder layer.'''
+
+    def __init__(self, d_model, n_heads, d_ff, dropout_rate=0.1):
+        '''Initialize the class.
+        Args:
+            d_model: The dimensionality of input and output.
+            n_heads: The number of heads.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+        '''
+        super(DecoderLayer, self).__init__()
+
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+
+        self.attn1 = MultiHeadAttention(d_model, n_heads, dropout_rate)
+        self.attn2 = MultiHeadAttention(d_model, n_heads, dropout_rate)
+        self.ff = PositionWiseFeedForward(d_model, d_ff, dropout_rate)
+        self.ln1 = nn.LayerNorm(d_model)
+        self.ln2 = nn.LayerNorm(d_model)
+        self.ln3 = nn.LayerNorm(d_model)
+
+    def forward(self, x, enc_out, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+        '''Forward of the decoder layer.
+
+        Args:
+            x: Input tensor.
+            enc_out: Output tensor of the encoder.
+            attn_mask: Attention mask.
+            pad_mask: Padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        x = x + self.attn1(self.ln1(x), attn_mask, pad_mask)
+        # (batch_size, seq_len, d_model)
+        x = x + self.attn2(self.ln2(x), enc_out, pad_mask)
+        # (batch_size, seq_len, d_model)
+        x = x + self.ff(self.ln3(x))
+
+        return x
