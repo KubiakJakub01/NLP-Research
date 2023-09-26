@@ -30,7 +30,9 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         self.attn = nn.MultiheadAttention(d_model, n_heads, dropout_rate)
 
-    def forward(self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+    def forward(
+        self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None
+    ):
         '''Forward of the multi-head attention.
 
         Args:
@@ -71,7 +73,7 @@ class PositionWiseFeedForward(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout_rate),
             nn.Linear(d_ff, d_model),
-            nn.Dropout(dropout_rate)
+            nn.Dropout(dropout_rate),
         )
 
     def forward(self, x):
@@ -109,7 +111,9 @@ class EncoderLayer(nn.Module):
         self.ln1 = nn.LayerNorm(d_model)
         self.ln2 = nn.LayerNorm(d_model)
 
-    def forward(self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+    def forward(
+        self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None
+    ):
         '''Forward of the encoder layer.
 
         Args:
@@ -152,7 +156,13 @@ class DecoderLayer(nn.Module):
         self.ln2 = nn.LayerNorm(d_model)
         self.ln3 = nn.LayerNorm(d_model)
 
-    def forward(self, x, enc_out, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+    def forward(
+        self,
+        x,
+        enc_out,
+        attn_mask: Tensor | None = None,
+        pad_mask: Tensor | None = None,
+    ):
         '''Forward of the decoder layer.
 
         Args:
@@ -193,7 +203,12 @@ class Encoder(nn.Module):
         self.n_heads = n_heads
         self.d_ff = d_ff
 
-        self.layers = nn.ModuleList([EncoderLayer(d_model, n_heads, d_ff, dropout_rate) for _ in range(n_layers)])
+        self.layers = nn.ModuleList(
+            [
+                EncoderLayer(d_model, n_heads, d_ff, dropout_rate)
+                for _ in range(n_layers)
+            ]
+        )
 
     def forward(self, x, pad_mask: Tensor | None = None):
         '''Forward of the encoder.
@@ -231,7 +246,12 @@ class Decoder(nn.Module):
         self.n_heads = n_heads
         self.d_ff = d_ff
 
-        self.layers = nn.ModuleList([DecoderLayer(d_model, n_heads, d_ff, dropout_rate) for _ in range(n_layers)])
+        self.layers = nn.ModuleList(
+            [
+                DecoderLayer(d_model, n_heads, d_ff, dropout_rate)
+                for _ in range(n_layers)
+            ]
+        )
 
     def forward(self, x, enc_out, pad_mask: Tensor | None = None):
         '''Forward of the decoder.
@@ -273,7 +293,13 @@ class Transformer(nn.Module):
         self.encoder = Encoder(n_layers, d_model, n_heads, d_ff, dropout_rate)
         self.decoder = Decoder(n_layers, d_model, n_heads, d_ff, dropout_rate)
 
-    def forward(self, src, tgt, src_pad_mask: Tensor | None = None, tgt_pad_mask: Tensor | None = None):
+    def forward(
+        self,
+        src,
+        tgt,
+        src_pad_mask: Tensor | None = None,
+        tgt_pad_mask: Tensor | None = None,
+    ):
         '''Forward of the transformer.
 
         Args:
@@ -291,4 +317,69 @@ class Transformer(nn.Module):
         dec_out = self.decoder(tgt, enc_out, pad_mask=tgt_pad_mask)
 
         return dec_out
-    
+
+
+class TransformerPytorch(nn.Module):
+    '''Transformer model implemented in PyTorch.'''
+
+    def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
+        '''Initialize the class.
+
+        Args:
+            n_layers: The number of layers.
+            d_model: The dimensionality of input and output.
+            n_heads: The number of heads.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+        '''
+        super(TransformerPytorch, self).__init__()
+
+        self.n_layers = n_layers
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+
+        self.encoder = nn.TransformerEncoder(
+            encoder_layer=nn.TransformerEncoderLayer(
+                d_model, n_heads, d_ff, dropout_rate
+            ),
+            num_layers=n_layers,
+            norm=nn.LayerNorm(d_model),
+        )
+        self.decoder = nn.TransformerDecoder(
+            decoder_layer=nn.TransformerDecoderLayer(
+                d_model, n_heads, d_ff, dropout_rate
+            ),
+            num_layers=n_layers,
+            norm=nn.LayerNorm(d_model),
+        )
+
+    def forward(
+        self,
+        src,
+        tgt,
+        src_pad_mask: Tensor | None = None,
+        tgt_pad_mask: Tensor | None = None,
+    ):
+        '''Forward of the transformer.
+
+        Args:
+            src: Source tensor.
+            tgt: Target tensor.
+            src_pad_mask: Source padding mask.
+            tgt_pad_mask: Target padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, src_len, d_model)
+        enc_out = self.encoder(src, src_key_padding_mask=src_pad_mask)
+        # (batch_size, tgt_len, d_model)
+        dec_out = self.decoder(
+            tgt,
+            enc_out,
+            tgt_key_padding_mask=tgt_pad_mask,
+            memory_key_padding_mask=src_pad_mask,
+        )
+
+        return dec_out
