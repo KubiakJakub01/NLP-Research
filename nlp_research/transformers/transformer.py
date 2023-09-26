@@ -249,3 +249,46 @@ class Decoder(nn.Module):
             x = layer(x, enc_out, pad_mask=pad_mask)
 
         return x
+
+
+class Transformer(nn.Module):
+    '''Transformer model.'''
+
+    def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
+        '''Initialize the class.
+        Args:
+            n_layers: The number of layers.
+            d_model: The dimensionality of input and output.
+            n_heads: The number of heads.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+        '''
+        super(Transformer, self).__init__()
+
+        self.n_layers = n_layers
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+
+        self.encoder = Encoder(n_layers, d_model, n_heads, d_ff, dropout_rate)
+        self.decoder = Decoder(n_layers, d_model, n_heads, d_ff, dropout_rate)
+
+    def forward(self, src, tgt, src_pad_mask: Tensor | None = None, tgt_pad_mask: Tensor | None = None):
+        '''Forward of the transformer.
+
+        Args:
+            src: Source tensor.
+            tgt: Target tensor.
+            src_pad_mask: Source padding mask.
+            tgt_pad_mask: Target padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, src_len, d_model)
+        enc_out = self.encoder(src, pad_mask=src_pad_mask)
+        # (batch_size, tgt_len, d_model)
+        dec_out = self.decoder(tgt, enc_out, pad_mask=tgt_pad_mask)
+
+        return dec_out
+    
