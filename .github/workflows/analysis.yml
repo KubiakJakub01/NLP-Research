@@ -25,7 +25,7 @@ jobs:
                   pylint --rcfile pyproject.toml nlp_research
             - name: Run pycodestyle
               run: |
-                   pycodestyle --config pyproject.toml nlp_research
+                pycodestyle --max-line-length 100 nlp_research
             - name: Run mypy
               run: |
                     mypy --config pyproject.toml nlp_research

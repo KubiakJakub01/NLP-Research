@@ -1,13 +1,6 @@
 '''Implementation of the Transformer model.'''
-import math
-
-import numpy as np
-import torch
-from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
-from einops import rearrange, repeat
+from torch import Tensor
 
 
 class MultiHeadAttention(nn.Module):
