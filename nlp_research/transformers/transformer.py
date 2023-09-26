@@ -210,3 +210,42 @@ class Encoder(nn.Module):
             x = layer(x, pad_mask=pad_mask)
 
         return x
+
+
+class Decoder(nn.Module):
+    '''Decoder.'''
+
+    def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
+        '''Initialize the class.
+        Args:
+            n_layers: The number of layers.
+            d_model: The dimensionality of input and output.
+            n_heads: The number of heads.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+        '''
+        super(Decoder, self).__init__()
+
+        self.n_layers = n_layers
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+
+        self.layers = nn.ModuleList([DecoderLayer(d_model, n_heads, d_ff, dropout_rate) for _ in range(n_layers)])
+
+    def forward(self, x, enc_out, pad_mask: Tensor | None = None):
+        '''Forward of the decoder.
+
+        Args:
+            x: Input tensor.
+            enc_out: Output tensor of the encoder.
+            pad_mask: Padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        for layer in self.layers:
+            x = layer(x, enc_out, pad_mask=pad_mask)
+
+        return x
