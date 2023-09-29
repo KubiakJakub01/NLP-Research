@@ -7,13 +7,15 @@ from transformers.modeling_outputs import \
     BaseModelOutputWithPastAndCrossAttentions
 from transformers.modeling_utils import SequenceSummary
 from transformers.utils import logging
-from utils import LOG_INFO
+
+from ..hparams import HParams
+from ..utils import LOG_INFO
 
 
 class GPT2LMHeadModel(GPT2Model):
     """GPT2 with language modeling head."""
 
-    def __init__(self, config):
+    def __init__(self, config: HParams):
         super().__init__(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
@@ -95,7 +97,7 @@ class GPT2LMHeadModel(GPT2Model):
 class GPT2LMHeadModelWithLatent(GPT2Model):
     """GPT2 with language modeling head and latent vector."""
 
-    def __init__(self, config):
+    def __init__(self, config: HParams):
         super().__init__(config)
         self.lm_head = nn.Linear(
             config.n_embd + config.latent_size, config.vocab_size, bias=False
