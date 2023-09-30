@@ -1,12 +1,9 @@
 """Implementation of GPT model."""
 import torch
 import torch.nn as nn
-from transformers import GPT2Config, GPT2Model
-from transformers.activations import ACT2FN
+from transformers import GPT2Model
 from transformers.modeling_outputs import \
     BaseModelOutputWithPastAndCrossAttentions
-from transformers.modeling_utils import SequenceSummary
-from transformers.utils import logging
 
 from ..hparams import HParams
 from ..utils import LOG_INFO
