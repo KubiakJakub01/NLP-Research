@@ -5,14 +5,14 @@ from transformers import GPT2Model
 from transformers.modeling_outputs import \
     BaseModelOutputWithPastAndCrossAttentions
 
-from ..hparams import HParams
+from ..hparams import GPTHparams
 from ..utils import LOG_INFO
 
 
 class GPT2LMHeadModel(GPT2Model):
     """GPT2 with language modeling head."""
 
-    def __init__(self, config: HParams):
+    def __init__(self, config: GPTHparams):
         super().__init__(config)
         self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
@@ -94,7 +94,7 @@ class GPT2LMHeadModel(GPT2Model):
 class GPT2LMHeadModelWithLatent(GPT2Model):
     """GPT2 with language modeling head and latent vector."""
 
-    def __init__(self, config: HParams):
+    def __init__(self, config: GPTHparams):
         super().__init__(config)
         self.lm_head = nn.Linear(
             config.n_embd + config.latent_size, config.vocab_size, bias=False

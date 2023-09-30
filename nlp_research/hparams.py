@@ -36,6 +36,9 @@ class GPTHparams(HParams):
     n_head: int = field(
         default=12, metadata={'help': 'Number of attention heads.'}
     )
+    latent_size: int = field(
+        default=0, metadata={'help': 'Size of latent vector.'}
+    )
     n_ctx: int = field(
         default=1024, metadata={'help': 'Size of context window.'}
     )
