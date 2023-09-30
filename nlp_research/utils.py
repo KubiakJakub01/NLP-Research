@@ -1,11 +1,7 @@
 """Utility functions for the project."""
 import logging
-import os
-import random
 
 import coloredlogs
-import torch
-import numpy as np
 
 # Set up logging
 logger = logging.getLogger(__name__)

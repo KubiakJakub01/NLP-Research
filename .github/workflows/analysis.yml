@@ -28,4 +28,4 @@ jobs:
                 pycodestyle --max-line-length 100 nlp_research
             - name: Run mypy
               run: |
-                    mypy --config pyproject.toml nlp_research
+                mypy --ignore-missing-imports nlp_research

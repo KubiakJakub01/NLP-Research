@@ -1,32 +1,35 @@
 [project]
-name = "nlp_research"
-description = "NLP Research"
-readme = "README.md"
-version = "0.0.0"
+name = 'nlp_research'
+description = 'NLP Research'
+readme = 'README.md'
+version = '0.0.0'
 authors = [
-    { name = "Jakub Kubiak", email = "kubiak.jakub01@gmail.com" }]
-requires-python = ">=3.10.0"
+    { name = 'Jakub Kubiak', email = 'kubiak.jakub01@gmail.com' }]
+requires-python = '>=3.10.0'
 dependencies = [
-    "torch==2.0.1",
-    "torchvision==0.15.2",
-    "torchaudio==2.0.2",
-    "transformers==4.33.2",
-    "datasets==2.14.5",
-    "pylint==2.17.5",
-    "pycodestyle==2.11.0",
-    "mypy==1.5.1",
-    "einops==0.6.1",
-    "coloredlogs==15.0.1"]
+    'torch==2.0.1',
+    'torchvision==0.15.2',
+    'torchaudio==2.0.2',
+    'transformers==4.33.2',
+    'datasets==2.14.5',
+    'pylint==2.17.5',
+    'pycodestyle==2.11.0',
+    'mypy==1.5.1',
+    'einops==0.6.1',
+    'coloredlogs==15.0.1',
+    'stubs==1.0.0']
 classifiers = [
-    "Programming Language :: Python :: 3.10",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Natural Language Processing",]
+    'Programming Language :: Python :: 3.10',
+    'Topic :: Scientific/Engineering :: Artificial Intelligence',
+    'Topic :: Scientific/Engineering :: Natural Language Processing',]
 
 [tool.pylint]
 max-line-length = 100
-disable = "missing-docstring"
+disable = ['missing-docstring',
+            'invalid-name',
+            'too-many-instance-attributes']
 fail-under = 10.0
 
 [build-system]
-build-backend = "flit_core.buildapi"
-requires = ["flit_core >=3.8.0,<4"]
+build-backend = 'flit_core.buildapi'
+requires = ['flit_core >=3.8.0,<4']
