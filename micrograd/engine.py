@@ -8,7 +8,7 @@ import numpy as np
 class Tensor:
     '''A tensor is a multi-dimensional array of numbers.'''
 
-    def __init__(self, data, requires_grad=False):
+    def __init__(self, data, requires_grad=False, _op=''):
         '''Store the data and gradient status.'''
         self.data = data
         if not isinstance(data, np.ndarray):
@@ -43,3 +43,25 @@ class Tensor:
         if grad is None:
             grad = np.ones_like(self.data)
         self.grad_fn.backward(grad)
+
+    def __add__(self, other):
+        '''Add two tensors.'''
+        out = Tensor(np.add(self.data, other.data), _op='+')
+
+        def _backward(grad):
+            self.grad = grad
+            other.grad = grad
+        out._grad_fn = _backward
+
+        return out
+    
+    def __mul__(self, other):
+        '''Multiply two tensors.'''
+        out = Tensor(np.multiply(self.data, other.data), _op='*')
+
+        def _backward(grad):
+            self.grad = grad * other.data
+            other.grad = grad * self.data
+        out._grad_fn = _backward
+
+        return out
