@@ -76,3 +76,14 @@ class Tensor:
         out._grad_fn = _backward
 
         return out
+    
+    def __truediv__(self, other):
+        '''Divide two tensors.'''
+        out = Tensor(np.divide(self.data, other.data), _op='/')
+
+        def _backward(grad):
+            self.grad = grad / other.data
+            other.grad = -grad * self.data / (other.data ** 2)
+        out._grad_fn = _backward
+
+        return out
