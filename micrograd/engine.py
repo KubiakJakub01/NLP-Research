@@ -65,3 +65,14 @@ class Tensor:
         out._grad_fn = _backward
 
         return out
+
+    def __sub__(self, other):
+        '''Subtract two tensors.'''
+        out = Tensor(np.subtract(self.data, other.data), _op='-')
+
+        def _backward(grad):
+            self.grad = grad
+            other.grad = -grad
+        out._grad_fn = _backward
+
+        return out
