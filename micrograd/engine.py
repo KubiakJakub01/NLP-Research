@@ -38,11 +38,16 @@ class Tensor:
 
     def backward(self, grad=None):
         '''Backward pass through the computational graph.'''
-        if self.grad_fn is None:
-            raise RuntimeError("Can't call backward on a tensor that has no grad_fn")
         if grad is None:
             grad = np.ones_like(self.data)
-        self.grad_fn.backward(grad)
+        if not self.requires_grad:
+            return
+        if self._grad is None:
+            self._grad = grad
+        else:
+            self._grad += grad
+        if self._grad_fn is not None:
+            self._grad_fn(grad)
 
     def __add__(self, other):
         '''Add two tensors.'''
