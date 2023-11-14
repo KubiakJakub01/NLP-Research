@@ -27,7 +27,9 @@ classifiers = [
 max-line-length = 100
 disable = ['missing-docstring',
             'invalid-name',
-            'too-many-instance-attributes']
+            'too-many-instance-attributes',
+            'too-many-arguments',
+            'method-hidden']
 fail-under = 10.0
 
 [build-system]

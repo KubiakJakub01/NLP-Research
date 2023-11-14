@@ -1,8 +1,8 @@
 '''Class with basic trainer class for NLP models'''
 import numpy as np
 import pandas as pd
-import torch
 from torch.utils.data import Dataset
+from torch.utils.tensorboard import SummaryWriter
 from transformers import (
     EarlyStoppingCallback,
     EvalPrediction,
@@ -25,7 +25,7 @@ class NLPTrainer(Trainer):
         args: TrainingArguments,
         train_dataset: Dataset,
         eval_dataset: Dataset,
-        compute_metrics: dict[str, float] = None,
+        compute_metrics: dict[str, float] | None = None,
         callbacks=None,
         optimizers=None,
         **kwargs,
@@ -43,6 +43,12 @@ class NLPTrainer(Trainer):
         )
         self.tokenizer = tokenizer
         self.args = args
+        self.early_stopping_callback = EarlyStoppingCallback(
+            early_stopping_patience=args.early_stopping_patience,
+            early_stopping_threshold=args.early_stopping_threshold,
+        )
+        self.writer = SummaryWriter(log_dir=args.output_dir)
+        self.log_history = pd.DataFrame()
 
     def compute_metrics(self, p: EvalPrediction) -> dict:
         '''Compute metrics for NLP models'''
@@ -80,7 +86,7 @@ class NLPTrainer(Trainer):
         if self.args.local_rank not in [-1, 0]:
             return
         self.tokenizer = self.tokenizer.from_pretrained
-        self.model = self.model.from_pretrained(output_dir)
+        self.model: PreTrainedModel = self.model.from_pretrained(output_dir)
 
     def _load_metrics(self, output_dir: str) -> None:
         '''Load metrics for NLP models'''
