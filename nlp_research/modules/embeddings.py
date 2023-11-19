@@ -1,4 +1,6 @@
 '''Module with different embeddings'''
+import math
+
 import einops
 import torch
 from torch import nn
@@ -49,4 +51,56 @@ class Embeddings(nn.Module):
         embeddings = word_embeddings + position_embeddings
         embeddings = self.LayerNorm(embeddings)
         embeddings = self.dropout(embeddings)
+        return embeddings
+
+
+class SinusoidalPositionalEmbedding(nn.Module):
+    '''SinusoidalPositionalEmbedding module'''
+
+    def __init__(
+        self,
+        embedding_dim: int,
+        max_position_embeddings: int,
+    ):
+        '''Init SinusoidalPositionalEmbedding module
+        
+        Args:
+            embedding_dim (int): embedding dim
+            max_position_embeddings (int): max position embeddings'''
+        super().__init__()
+        self.embedding_dim = embedding_dim
+        self.max_position_embeddings = max_position_embeddings
+        self.register_buffer(
+            "weights",
+            self._init_weights(),
+        )
+
+    def _init_weights(self) -> torch.Tensor:
+        '''Init weights for SinusoidalPositionalEmbedding module'''
+        weights = torch.zeros(
+            self.max_position_embeddings, self.embedding_dim
+        )
+        position = torch.arange(
+            0, self.max_position_embeddings, dtype=torch.float
+        ).unsqueeze(1)
+        div_term = torch.exp(
+            torch.arange(
+                0, self.embedding_dim, 2, dtype=torch.float
+            )
+            * (-math.log(10000.0) / self.embedding_dim)
+        )
+        weights[:, 0::2] = torch.sin(position * div_term)
+        weights[:, 1::2] = torch.cos(position * div_term)
+        return weights.unsqueeze(0)
+
+    def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
+        '''Forward pass for SinusoidalPositionalEmbedding module
+
+        Args:
+            input_ids (torch.Tensor): input ids
+
+        Returns:
+            torch.Tensor: embeddings'''
+        seq_length = input_ids.size(1)
+        embeddings = self.weights[:, :seq_length, :]
         return embeddings
