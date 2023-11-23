@@ -17,7 +17,7 @@ class Embeddings(nn.Module):
         max_position_embeddings: int,
     ):
         '''Init Embeddings module
-        
+
         Args:
             vocab_size (int): vocab size
             embedding_dim (int): embedding dim
@@ -63,7 +63,7 @@ class SinusoidalPositionalEmbedding(nn.Module):
         max_position_embeddings: int,
     ):
         '''Init SinusoidalPositionalEmbedding module
-        
+
         Args:
             embedding_dim (int): embedding dim
             max_position_embeddings (int): max position embeddings'''
@@ -102,5 +102,5 @@ class SinusoidalPositionalEmbedding(nn.Module):
         Returns:
             torch.Tensor: embeddings'''
         seq_length = input_ids.size(1)
-        embeddings = self.weights[:, :seq_length, :]
+        embeddings = self.weights[:, :seq_length, :]  # type: ignore
         return embeddings
