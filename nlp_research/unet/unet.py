@@ -1,14 +1,14 @@
 '''U-Net implementation in PyTorch.'''
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from einops import rearrange, repeat
+
+from ..hparams import UNetHparams
 
 
 class UNet(nn.Module):
     '''U-Net implementation in PyTorch.'''
 
-    def __init__(self, hparams):
+    def __init__(self, hparams: UNetHparams):
         '''Initialize UNet.
 
         Args:
@@ -19,7 +19,7 @@ class UNet(nn.Module):
         super().__init__()
 
         self.hparams = hparams
-        features = self.hparams.init_features
+        features = self.hparams.features
         self.encoder1 = UNet._block(self.hparams.in_channels, features, name='enc1')
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.encoder2 = UNet._block(features, features * 2, name='enc2')
