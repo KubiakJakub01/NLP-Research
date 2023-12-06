@@ -12,9 +12,7 @@ class UNet(nn.Module):
         '''Initialize UNet.
 
         Args:
-            in_channels (int): number of input channels
-            out_channels (int): number of output channels
-            init_features (int): number of initial features
+            hparams: hyperparameters
         '''
         super().__init__()
 
@@ -53,13 +51,12 @@ class UNet(nn.Module):
         )
 
     @staticmethod
-    def _block(in_channels, features, name):
+    def _block(in_channels: int, features: int):
         '''U-Net block.
 
         Args:
-            in_channels (int): number of input channels
-            features (int): number of output channels
-            name (str): name of the block
+            in_channels: number of input channels
+            features: number of output channels
 
         Returns:
             nn.Sequential: U-Net block
@@ -85,11 +82,11 @@ class UNet(nn.Module):
             nn.ReLU(inplace=True),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         '''Forward pass.
 
         Args:
-            x (torch.Tensor): input tensor
+            x: input tensor
 
         Returns:
             torch.Tensor: output tensor
@@ -120,11 +117,11 @@ class UNet(nn.Module):
         return self.conv(dec1)
 
     @torch.inference_mode()
-    def inference(self, x):
+    def inference(self, x: torch.Tensor):
         '''Inference.
 
         Args:
-            x (torch.Tensor): input tensor
+            x: input tensor
 
         Returns:
             torch.Tensor: output tensor
