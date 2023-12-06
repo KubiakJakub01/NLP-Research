@@ -51,12 +51,13 @@ class UNet(nn.Module):
         )
 
     @staticmethod
-    def _block(in_channels: int, features: int):
+    def _block(in_channels: int, features: int, name: str):
         '''U-Net block.
 
         Args:
             in_channels: number of input channels
             features: number of output channels
+            name: name of the block
 
         Returns:
             nn.Sequential: U-Net block
