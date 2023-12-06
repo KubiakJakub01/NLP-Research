@@ -82,3 +82,31 @@ class GPTHparams(HParams):
     adam_epsilon: float = field(
         default=1e-8, metadata={'help': 'Epsilon for Adam optimizer.'}
     )
+
+
+@dataclass
+class UNetHparams(HParams):
+    '''Hyperparameters for UNet.'''
+    # Model
+    in_channels: int = field(
+        default=3, metadata={'help': 'Number of input channels.'}
+    )
+    out_channels: int = field(
+        default=1, metadata={'help': 'Number of output channels.'}
+    )
+    features: int = field(
+        default=64, metadata={'help': 'Number of features in first layer.'}
+    )
+    # Training
+    batch_size: int = field(
+        default=8, metadata={'help': 'Batch size for training.'}
+    )
+    learning_rate: float = field(
+        default=1e-4, metadata={'help': 'Learning rate for training.'}
+    )
+    weight_decay: float = field(
+        default=1e-4, metadata={'help': 'Weight decay for training.'}
+    )
+    adam_epsilon: float = field(
+        default=1e-8, metadata={'help': 'Epsilon for Adam optimizer.'}
+    )
