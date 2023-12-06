@@ -118,3 +118,15 @@ class UNet(nn.Module):
         dec1 = self.decoder1(dec1)
 
         return self.conv(dec1)
+
+    @torch.inference_mode()
+    def inference(self, x):
+        '''Inference.
+
+        Args:
+            x (torch.Tensor): input tensor
+
+        Returns:
+            torch.Tensor: output tensor
+        '''
+        return self.forward(x)
