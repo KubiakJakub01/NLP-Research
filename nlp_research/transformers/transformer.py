@@ -1,4 +1,5 @@
 '''Implementation of the Transformer model.'''
+import torch
 import torch.nn as nn
 from torch import Tensor
 from einops import rearrange
@@ -449,3 +450,24 @@ class CTCTransformer(nn.Module):
         )
 
         return loss
+    
+    @torch.inference_mode()
+    def inference(self, src, src_pad_mask: Tensor | None = None):
+        '''Inference of the CTC-Transformer.
+
+        Args:
+            src: Source tensor.
+            src_pad_mask: Source padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        dec_out = self.transformer(src, src_pad_mask=src_pad_mask)
+        # (batch_size, seq_len, n_classes)
+        out = self.out(dec_out)
+
+        log_probs = self.softmax(out)
+        log_probs = rearrange(log_probs, 'b s c -> s b c')
+
+        return log_probs
