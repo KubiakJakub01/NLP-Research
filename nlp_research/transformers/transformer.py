@@ -450,7 +450,7 @@ class CTCTransformer(nn.Module):
         )
 
         return loss
-    
+
     @torch.inference_mode()
     def inference(self, src, src_pad_mask: Tensor | None = None):
         '''Inference of the CTC-Transformer.
