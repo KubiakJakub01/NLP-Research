@@ -1,6 +1,8 @@
 '''Implementation of the Transformer model.'''
+import torch
 import torch.nn as nn
 from torch import Tensor
+from einops import rearrange
 
 
 class MultiHeadAttention(nn.Module):
@@ -376,3 +378,96 @@ class TransformerPytorch(nn.Module):
         )
 
         return dec_out
+
+
+class CTCTransformer(nn.Module):
+    '''CTC-Transformer model.'''
+
+    def __init__(
+        self,
+        n_layers,
+        d_model,
+        n_heads,
+        d_ff,
+        dropout_rate=0.1,
+        n_classes: int = 28,
+    ):
+        '''Initialize the class.
+
+        Args:
+            n_layers: The number of layers.
+            d_model: The dimensionality of input and output.
+            n_heads: The number of heads.
+            d_ff: The dimensionality of the inner layer.
+            dropout_rate: Dropout rate.
+            n_classes: The number of classes.
+        '''
+        super(CTCTransformer, self).__init__()
+
+        self.n_layers = n_layers
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+        self.n_classes = n_classes
+
+        self.transformer = Transformer(
+            n_layers, d_model, n_heads, d_ff, dropout_rate
+        )
+        self.out = nn.Linear(d_model, n_classes)
+        self.softmax = nn.LogSoftmax(dim=-1)
+        self.ctc_loss = nn.CTCLoss(blank=0, reduction='mean')
+
+    def forward(
+        self,
+        src,
+        tgt,
+        src_pad_mask: Tensor | None = None,
+        tgt_pad_mask: Tensor | None = None,
+    ):
+        '''Forward of the CTC-Transformer.
+
+        Args:
+            src: Source tensor.
+            tgt: Target tensor.
+            src_pad_mask: Source padding mask.
+            tgt_pad_mask: Target padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        dec_out = self.transformer(
+            src, tgt, src_pad_mask=src_pad_mask, tgt_pad_mask=tgt_pad_mask
+        )
+        # (batch_size, seq_len, n_classes)
+        out = self.out(dec_out)
+
+        log_probs = self.softmax(out)
+        log_probs = rearrange(log_probs, 'b s c -> s b c')
+
+        loss = self.ctc_loss(
+            log_probs, tgt[:, 1:], src_lengths=[src.shape[1]] * len(src)
+        )
+
+        return loss
+
+    @torch.inference_mode()
+    def inference(self, src, src_pad_mask: Tensor | None = None):
+        '''Inference of the CTC-Transformer.
+
+        Args:
+            src: Source tensor.
+            src_pad_mask: Source padding mask.
+
+        Returns:
+            The output tensor.
+        '''
+        # (batch_size, seq_len, d_model)
+        dec_out = self.transformer(src, src_pad_mask=src_pad_mask)
+        # (batch_size, seq_len, n_classes)
+        out = self.out(dec_out)
+
+        log_probs = self.softmax(out)
+        log_probs = rearrange(log_probs, 'b s c -> s b c')
+
+        return log_probs
