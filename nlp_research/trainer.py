@@ -12,7 +12,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from .utils import LOG_INFO
+from .utils import log_info
 
 
 class NLPTrainer(Trainer):
@@ -61,9 +61,9 @@ class NLPTrainer(Trainer):
             return
         for key, value in logs.items():
             if key in ['eval_loss', 'eval_accuracy']:
-                LOG_INFO(f'{key} = {value:.3f}')
+                log_info(f'{key} = {value:.3f}')
             else:
-                LOG_INFO(f'{key} = {value}')
+                log_info(f'{key} = {value}')
 
     def _save_model(self, output_dir: str) -> None:
         '''Save model for NLP models'''

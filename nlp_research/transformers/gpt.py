@@ -6,7 +6,7 @@ from transformers.modeling_outputs import \
     BaseModelOutputWithPastAndCrossAttentions
 
 from ..hparams import GPTHparams
-from ..utils import LOG_INFO
+from ..utils import log_info
 
 
 class GPT2LMHeadModel(GPT2Model):
