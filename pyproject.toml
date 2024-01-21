@@ -32,6 +32,7 @@ disable = ['missing-docstring',
             'too-many-arguments',
             'method-hidden']
 fail-under = 10.0
+generated-members=['numpy.*','torch.*']
 
 [build-system]
 build-backend = 'flit_core.buildapi'
