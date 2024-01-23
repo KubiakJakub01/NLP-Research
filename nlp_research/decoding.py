@@ -1,7 +1,6 @@
 '''Module with functions for decoding the output of a neural network.'''
 import torch
 
-from transformers import top_k_top_p_filtering
 
 def gready_decode(model, src, src_mask, max_len, start_symbol, device):
     '''Gready decoding.'''
