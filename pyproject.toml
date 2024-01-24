@@ -30,7 +30,8 @@ disable = ['missing-docstring',
             'invalid-name',
             'too-many-instance-attributes',
             'too-many-arguments',
-            'method-hidden']
+            'method-hidden',
+            'too-many-locals']
 fail-under = 10.0
 generated-members=['numpy.*','torch.*']
 
