@@ -2,11 +2,9 @@
 import torch
 import torch.nn as nn
 from transformers import GPT2Model
-from transformers.modeling_outputs import \
-    BaseModelOutputWithPastAndCrossAttentions
+from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 
 from ..hparams import GPTHparams
-from ..utils import log_info
 
 
 class GPT2LMHeadModel(GPT2Model):
@@ -43,9 +41,7 @@ class GPT2LMHeadModel(GPT2Model):
         **kwargs,
     ):
         """Forward pass of GPT2LMHeadModel."""
-        return_dict = (
-            return_dict if return_dict is not None else self.config.use_return_dict
-        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         outputs = self.transformer(
             input_ids,
@@ -73,9 +69,7 @@ class GPT2LMHeadModel(GPT2Model):
 
             # Flatten the tokens
             loss_fct = nn.CrossEntropyLoss()
-            loss = loss_fct(
-                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
-            )
+            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if not return_dict:
             output = (lm_logits,) + outputs[1:]
@@ -96,9 +90,7 @@ class GPT2LMHeadModelWithLatent(GPT2Model):
 
     def __init__(self, config: GPTHparams):
         super().__init__(config)
-        self.lm_head = nn.Linear(
-            config.n_embd + config.latent_size, config.vocab_size, bias=False
-        )
+        self.lm_head = nn.Linear(config.n_embd + config.latent_size, config.vocab_size, bias=False)
         self.latent_size = config.latent_size
         self.latent = nn.Parameter(torch.zeros(1, 1, config.latent_size))
 
@@ -130,9 +122,7 @@ class GPT2LMHeadModelWithLatent(GPT2Model):
         **kwargs,
     ):
         """Forward pass of GPT2LMHeadModel."""
-        return_dict = (
-            return_dict if return_dict is not None else self.config.use_return_dict
-        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if latent is None:
             latent = self.latent
@@ -168,9 +158,7 @@ class GPT2LMHeadModelWithLatent(GPT2Model):
 
             # Flatten the tokens
             loss_fct = nn.CrossEntropyLoss()
-            loss = loss_fct(
-                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
-            )
+            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if not return_dict:
             output = (lm_logits,) + outputs[1:]

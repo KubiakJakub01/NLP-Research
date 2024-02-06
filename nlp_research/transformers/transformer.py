@@ -1,21 +1,21 @@
-'''Implementation of the Transformer model.'''
+"""Implementation of the Transformer model."""
 import torch
 import torch.nn as nn
-from torch import Tensor
 from einops import rearrange
+from torch import Tensor
 
 
 class MultiHeadAttention(nn.Module):
-    '''Multi-head attention mechanism.'''
+    """Multi-head attention mechanism."""
 
     def __init__(self, d_model, n_heads, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             d_model: The dimensionality of input and output.
             n_heads: The number of heads.
             dropout_rate: Dropout rate.
-        '''
-        super(MultiHeadAttention, self).__init__()
+        """
+        super().__init__()
 
         self.d_model = d_model
         self.n_heads = n_heads
@@ -25,10 +25,8 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         self.attn = nn.MultiheadAttention(d_model, n_heads, dropout_rate)
 
-    def forward(
-        self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None
-    ):
-        '''Forward of the multi-head attention.
+    def forward(self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+        """Forward of the multi-head attention.
 
         Args:
             x: Input tensor.
@@ -37,7 +35,7 @@ class MultiHeadAttention(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         qkv = self.to_qkv(x)
         # (batch_size, seq_len, 3 * d_model)
@@ -49,16 +47,16 @@ class MultiHeadAttention(nn.Module):
 
 
 class PositionWiseFeedForward(nn.Module):
-    '''Position-wise feed-forward layer.'''
+    """Position-wise feed-forward layer."""
 
     def __init__(self, d_model, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             d_model: The dimensionality of input and output.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(PositionWiseFeedForward, self).__init__()
+        """
+        super().__init__()
 
         self.d_model = d_model
         self.d_ff = d_ff
@@ -72,30 +70,30 @@ class PositionWiseFeedForward(nn.Module):
         )
 
     def forward(self, x):
-        '''Forward of the position-wise feed-forward layer.
+        """Forward of the position-wise feed-forward layer.
 
         Args:
             x: Input tensor.
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         return self.ff(x)
 
 
 class EncoderLayer(nn.Module):
-    '''Encoder layer.'''
+    """Encoder layer."""
 
     def __init__(self, d_model, n_heads, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             d_model: The dimensionality of input and output.
             n_heads: The number of heads.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(EncoderLayer, self).__init__()
+        """
+        super().__init__()
 
         self.d_model = d_model
         self.n_heads = n_heads
@@ -106,10 +104,8 @@ class EncoderLayer(nn.Module):
         self.ln1 = nn.LayerNorm(d_model)
         self.ln2 = nn.LayerNorm(d_model)
 
-    def forward(
-        self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None
-    ):
-        '''Forward of the encoder layer.
+    def forward(self, x, attn_mask: Tensor | None = None, pad_mask: Tensor | None = None):
+        """Forward of the encoder layer.
 
         Args:
             x: Input tensor.
@@ -118,7 +114,7 @@ class EncoderLayer(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         x = x + self.attn(self.ln1(x), attn_mask, pad_mask)
         # (batch_size, seq_len, d_model)
@@ -128,17 +124,17 @@ class EncoderLayer(nn.Module):
 
 
 class DecoderLayer(nn.Module):
-    '''Decoder layer.'''
+    """Decoder layer."""
 
     def __init__(self, d_model, n_heads, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             d_model: The dimensionality of input and output.
             n_heads: The number of heads.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(DecoderLayer, self).__init__()
+        """
+        super().__init__()
 
         self.d_model = d_model
         self.n_heads = n_heads
@@ -158,7 +154,7 @@ class DecoderLayer(nn.Module):
         attn_mask: Tensor | None = None,
         pad_mask: Tensor | None = None,
     ):
-        '''Forward of the decoder layer.
+        """Forward of the decoder layer.
 
         Args:
             x: Input tensor.
@@ -168,7 +164,7 @@ class DecoderLayer(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         x = x + self.attn1(self.ln1(x), attn_mask, pad_mask)
         # (batch_size, seq_len, d_model)
@@ -180,18 +176,18 @@ class DecoderLayer(nn.Module):
 
 
 class Encoder(nn.Module):
-    '''Encoder.'''
+    """Encoder."""
 
     def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             n_layers: The number of layers.
             d_model: The dimensionality of input and output.
             n_heads: The number of heads.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(Encoder, self).__init__()
+        """
+        super().__init__()
 
         self.n_layers = n_layers
         self.d_model = d_model
@@ -199,14 +195,11 @@ class Encoder(nn.Module):
         self.d_ff = d_ff
 
         self.layers = nn.ModuleList(
-            [
-                EncoderLayer(d_model, n_heads, d_ff, dropout_rate)
-                for _ in range(n_layers)
-            ]
+            [EncoderLayer(d_model, n_heads, d_ff, dropout_rate) for _ in range(n_layers)]
         )
 
     def forward(self, x, pad_mask: Tensor | None = None):
-        '''Forward of the encoder.
+        """Forward of the encoder.
 
         Args:
             x: Input tensor.
@@ -214,7 +207,7 @@ class Encoder(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         for layer in self.layers:
             x = layer(x, pad_mask=pad_mask)
@@ -223,18 +216,18 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    '''Decoder.'''
+    """Decoder."""
 
     def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             n_layers: The number of layers.
             d_model: The dimensionality of input and output.
             n_heads: The number of heads.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(Decoder, self).__init__()
+        """
+        super().__init__()
 
         self.n_layers = n_layers
         self.d_model = d_model
@@ -242,14 +235,11 @@ class Decoder(nn.Module):
         self.d_ff = d_ff
 
         self.layers = nn.ModuleList(
-            [
-                DecoderLayer(d_model, n_heads, d_ff, dropout_rate)
-                for _ in range(n_layers)
-            ]
+            [DecoderLayer(d_model, n_heads, d_ff, dropout_rate) for _ in range(n_layers)]
         )
 
     def forward(self, x, enc_out, pad_mask: Tensor | None = None):
-        '''Forward of the decoder.
+        """Forward of the decoder.
 
         Args:
             x: Input tensor.
@@ -258,7 +248,7 @@ class Decoder(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         for layer in self.layers:
             x = layer(x, enc_out, pad_mask=pad_mask)
@@ -267,18 +257,18 @@ class Decoder(nn.Module):
 
 
 class Transformer(nn.Module):
-    '''Transformer model.'''
+    """Transformer model."""
 
     def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
         Args:
             n_layers: The number of layers.
             d_model: The dimensionality of input and output.
             n_heads: The number of heads.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(Transformer, self).__init__()
+        """
+        super().__init__()
 
         self.n_layers = n_layers
         self.d_model = d_model
@@ -295,7 +285,7 @@ class Transformer(nn.Module):
         src_pad_mask: Tensor | None = None,
         tgt_pad_mask: Tensor | None = None,
     ):
-        '''Forward of the transformer.
+        """Forward of the transformer.
 
         Args:
             src: Source tensor.
@@ -305,7 +295,7 @@ class Transformer(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, src_len, d_model)
         enc_out = self.encoder(src, pad_mask=src_pad_mask)
         # (batch_size, tgt_len, d_model)
@@ -315,10 +305,10 @@ class Transformer(nn.Module):
 
 
 class TransformerPytorch(nn.Module):
-    '''Transformer model implemented in PyTorch.'''
+    """Transformer model implemented in PyTorch."""
 
     def __init__(self, n_layers, d_model, n_heads, d_ff, dropout_rate=0.1):
-        '''Initialize the class.
+        """Initialize the class.
 
         Args:
             n_layers: The number of layers.
@@ -326,8 +316,8 @@ class TransformerPytorch(nn.Module):
             n_heads: The number of heads.
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
-        '''
-        super(TransformerPytorch, self).__init__()
+        """
+        super().__init__()
 
         self.n_layers = n_layers
         self.d_model = d_model
@@ -335,16 +325,12 @@ class TransformerPytorch(nn.Module):
         self.d_ff = d_ff
 
         self.encoder = nn.TransformerEncoder(
-            encoder_layer=nn.TransformerEncoderLayer(
-                d_model, n_heads, d_ff, dropout_rate
-            ),
+            encoder_layer=nn.TransformerEncoderLayer(d_model, n_heads, d_ff, dropout_rate),
             num_layers=n_layers,
             norm=nn.LayerNorm(d_model),
         )
         self.decoder = nn.TransformerDecoder(
-            decoder_layer=nn.TransformerDecoderLayer(
-                d_model, n_heads, d_ff, dropout_rate
-            ),
+            decoder_layer=nn.TransformerDecoderLayer(d_model, n_heads, d_ff, dropout_rate),
             num_layers=n_layers,
             norm=nn.LayerNorm(d_model),
         )
@@ -356,7 +342,7 @@ class TransformerPytorch(nn.Module):
         src_pad_mask: Tensor | None = None,
         tgt_pad_mask: Tensor | None = None,
     ):
-        '''Forward of the transformer.
+        """Forward of the transformer.
 
         Args:
             src: Source tensor.
@@ -366,7 +352,7 @@ class TransformerPytorch(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, src_len, d_model)
         enc_out = self.encoder(src, src_key_padding_mask=src_pad_mask)
         # (batch_size, tgt_len, d_model)
@@ -381,7 +367,7 @@ class TransformerPytorch(nn.Module):
 
 
 class CTCTransformer(nn.Module):
-    '''CTC-Transformer model.'''
+    """CTC-Transformer model."""
 
     def __init__(
         self,
@@ -392,7 +378,7 @@ class CTCTransformer(nn.Module):
         dropout_rate=0.1,
         n_classes: int = 28,
     ):
-        '''Initialize the class.
+        """Initialize the class.
 
         Args:
             n_layers: The number of layers.
@@ -401,8 +387,8 @@ class CTCTransformer(nn.Module):
             d_ff: The dimensionality of the inner layer.
             dropout_rate: Dropout rate.
             n_classes: The number of classes.
-        '''
-        super(CTCTransformer, self).__init__()
+        """
+        super().__init__()
 
         self.n_layers = n_layers
         self.d_model = d_model
@@ -410,9 +396,7 @@ class CTCTransformer(nn.Module):
         self.d_ff = d_ff
         self.n_classes = n_classes
 
-        self.transformer = Transformer(
-            n_layers, d_model, n_heads, d_ff, dropout_rate
-        )
+        self.transformer = Transformer(n_layers, d_model, n_heads, d_ff, dropout_rate)
         self.out = nn.Linear(d_model, n_classes)
         self.softmax = nn.LogSoftmax(dim=-1)
         self.ctc_loss = nn.CTCLoss(blank=0, reduction='mean')
@@ -424,7 +408,7 @@ class CTCTransformer(nn.Module):
         src_pad_mask: Tensor | None = None,
         tgt_pad_mask: Tensor | None = None,
     ):
-        '''Forward of the CTC-Transformer.
+        """Forward of the CTC-Transformer.
 
         Args:
             src: Source tensor.
@@ -434,26 +418,22 @@ class CTCTransformer(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
-        dec_out = self.transformer(
-            src, tgt, src_pad_mask=src_pad_mask, tgt_pad_mask=tgt_pad_mask
-        )
+        dec_out = self.transformer(src, tgt, src_pad_mask=src_pad_mask, tgt_pad_mask=tgt_pad_mask)
         # (batch_size, seq_len, n_classes)
         out = self.out(dec_out)
 
         log_probs = self.softmax(out)
         log_probs = rearrange(log_probs, 'b s c -> s b c')
 
-        loss = self.ctc_loss(
-            log_probs, tgt[:, 1:], src_lengths=[src.shape[1]] * len(src)
-        )
+        loss = self.ctc_loss(log_probs, tgt[:, 1:], src_lengths=[src.shape[1]] * len(src))
 
         return loss
 
     @torch.inference_mode()
     def inference(self, src, src_pad_mask: Tensor | None = None):
-        '''Inference of the CTC-Transformer.
+        """Inference of the CTC-Transformer.
 
         Args:
             src: Source tensor.
@@ -461,7 +441,7 @@ class CTCTransformer(nn.Module):
 
         Returns:
             The output tensor.
-        '''
+        """
         # (batch_size, seq_len, d_model)
         dec_out = self.transformer(src, src_pad_mask=src_pad_mask)
         # (batch_size, seq_len, n_classes)

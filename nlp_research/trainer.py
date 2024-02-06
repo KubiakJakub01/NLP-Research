@@ -1,4 +1,4 @@
-'''Class with basic trainer class for NLP models'''
+"""Class with basic trainer class for NLP models"""
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
@@ -16,7 +16,7 @@ from .utils import log_info
 
 
 class NLPTrainer(Trainer):
-    '''Class with basic trainer class for NLP models'''
+    """Class with basic trainer class for NLP models"""
 
     def __init__(
         self,
@@ -30,7 +30,7 @@ class NLPTrainer(Trainer):
         optimizers=None,
         **kwargs,
     ):
-        '''Class with basic trainer class for NLP models'''
+        """Class with basic trainer class for NLP models"""
         super().__init__(
             model=model,
             args=args,
@@ -51,12 +51,12 @@ class NLPTrainer(Trainer):
         self.log_history = pd.DataFrame()
 
     def compute_metrics(self, p: EvalPrediction) -> dict:
-        '''Compute metrics for NLP models'''
+        """Compute metrics for NLP models"""
         preds = np.argmax(p.predictions, axis=1)
         return {'accuracy': (preds == p.label_ids).mean()}
 
     def _log(self, logs: dict) -> None:
-        '''Log metrics for NLP models'''
+        """Log metrics for NLP models"""
         if self.args.local_rank not in [-1, 0]:
             return
         for key, value in logs.items():
@@ -66,30 +66,30 @@ class NLPTrainer(Trainer):
                 log_info(f'{key} = {value}')
 
     def _save_model(self, output_dir: str) -> None:
-        '''Save model for NLP models'''
+        """Save model for NLP models"""
         if self.args.local_rank in [-1, 0]:
             self.tokenizer.save_pretrained(output_dir)
             self.model.save_pretrained(output_dir)
 
     def _save_metrics(self, output_dir: str) -> None:
-        '''Save metrics for NLP models'''
+        """Save metrics for NLP models"""
         if self.args.local_rank in [-1, 0]:
             self.log_history.to_csv(f'{output_dir}/log_history.csv')
 
     def _save(self, output_dir: str) -> None:
-        '''Save model and metrics for NLP models'''
+        """Save model and metrics for NLP models"""
         self._save_model(output_dir)
         self._save_metrics(output_dir)
 
     def _load_model(self, output_dir: str) -> None:
-        '''Load model for NLP models'''
+        """Load model for NLP models"""
         if self.args.local_rank not in [-1, 0]:
             return
         self.tokenizer = self.tokenizer.from_pretrained
         self.model: PreTrainedModel = self.model.from_pretrained(output_dir)
 
     def _load_metrics(self, output_dir: str) -> None:
-        '''Load metrics for NLP models'''
+        """Load metrics for NLP models"""
         if self.args.local_rank not in [-1, 0]:
             return
         self.log_history = pd.read_csv(f'{output_dir}/log_history.csv')
