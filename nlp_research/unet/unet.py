@@ -1,4 +1,4 @@
-'''U-Net implementation in PyTorch.'''
+"""U-Net implementation in PyTorch."""
 import torch
 import torch.nn as nn
 
@@ -6,14 +6,14 @@ from ..hparams import UNetHparams
 
 
 class UNet(nn.Module):
-    '''U-Net implementation in PyTorch.'''
+    """U-Net implementation in PyTorch."""
 
     def __init__(self, hparams: UNetHparams):
-        '''Initialize UNet.
+        """Initialize UNet.
 
         Args:
             hparams: hyperparameters
-        '''
+        """
         super().__init__()
 
         self.hparams = hparams
@@ -29,21 +29,13 @@ class UNet(nn.Module):
 
         self.bottleneck = UNet._block(features * 8, features * 16, name='bottleneck')
 
-        self.upconv4 = nn.ConvTranspose2d(
-            features * 16, features * 8, kernel_size=2, stride=2
-        )
+        self.upconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)
         self.decoder4 = UNet._block((features * 8) * 2, features * 8, name='dec4')
-        self.upconv3 = nn.ConvTranspose2d(
-            features * 8, features * 4, kernel_size=2, stride=2
-        )
+        self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
         self.decoder3 = UNet._block((features * 4) * 2, features * 4, name='dec3')
-        self.upconv2 = nn.ConvTranspose2d(
-            features * 4, features * 2, kernel_size=2, stride=2
-        )
+        self.upconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
         self.decoder2 = UNet._block((features * 2) * 2, features * 2, name='dec2')
-        self.upconv1 = nn.ConvTranspose2d(
-            features * 2, features, kernel_size=2, stride=2
-        )
+        self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
         self.decoder1 = UNet._block(features * 2, features, name='dec1')
 
         self.conv = nn.Conv2d(
@@ -52,7 +44,7 @@ class UNet(nn.Module):
 
     @staticmethod
     def _block(in_channels: int, features: int, name: str):
-        '''U-Net block.
+        """U-Net block.
 
         Args:
             in_channels: number of input channels
@@ -61,7 +53,7 @@ class UNet(nn.Module):
 
         Returns:
             nn.Sequential: U-Net block
-        '''
+        """
         return nn.Sequential(
             nn.Conv2d(
                 in_channels=in_channels,
@@ -84,14 +76,14 @@ class UNet(nn.Module):
         )
 
     def forward(self, x: torch.Tensor):
-        '''Forward pass.
+        """Forward pass.
 
         Args:
             x: input tensor
 
         Returns:
             torch.Tensor: output tensor
-        '''
+        """
         enc1 = self.encoder1(x)
         enc2 = self.encoder2(self.pool1(enc1))
         enc3 = self.encoder3(self.pool2(enc2))
@@ -119,12 +111,12 @@ class UNet(nn.Module):
 
     @torch.inference_mode()
     def inference(self, x: torch.Tensor):
-        '''Inference.
+        """Inference.
 
         Args:
             x: input tensor
 
         Returns:
             torch.Tensor: output tensor
-        '''
+        """
         return self.forward(x)
