@@ -5,6 +5,11 @@ description = "NLP Research"
 authors = ["KubiakJakub01 <kubiak.jakub01@gmail.com>"]
 readme = "README.md"
 
+[tool.poetry-exec-plugin.commands]
+ruff = "ruff check nlp"
+mypy = "mypy --ignore-missing-imports nlp_research"
+pylint = "pylint --rcfile pyproject.toml nlp_research"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 coloredlogs = "15.0.1"
