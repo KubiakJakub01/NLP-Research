@@ -9,7 +9,6 @@ on:
 jobs:
 
   run-pylint:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -29,7 +28,6 @@ jobs:
         run: poetry run pylint --rcfile pyproject.toml nlp_research
 
   run-ruff:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -49,7 +47,6 @@ jobs:
         run: poetry run ruff check nlp_research
 
   run-mypy:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
