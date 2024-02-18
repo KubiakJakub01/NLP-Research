@@ -19,6 +19,8 @@ stubs = "1.0.0"
 transformers = "4.37.1"
 torch = {version = "2.2.0+cu118", source = "torch"}
 torchaudio = {version = "2.2.0+cu118", source = "torch"}
+pesq = "^0.0.4"
+pystoi = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.5.1"
