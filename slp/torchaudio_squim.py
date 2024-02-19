@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import torch
 import torchaudio
 import torchaudio.functional as F
+from pesq import pesq
+from pystoi import stoi
+from torchaudio.pipelines import SQUIM_OBJECTIVE
 from torchaudio.utils import download_asset
 
 
@@ -68,3 +71,44 @@ if __name__ == '__main__':
         WAVEFORM_NOISE = WAVEFORM_NOISE[:, : WAVEFORM_SPEECH.shape[1]]
     else:
         WAVEFORM_SPEECH = WAVEFORM_SPEECH[:, : WAVEFORM_NOISE.shape[1]]
+
+    # Mix speech and noise
+    snr_dbs = torch.tensor([20, -5])
+    WAVEFORM_DISTORTED = F.add_noise(WAVEFORM_SPEECH, WAVEFORM_NOISE, snr_dbs)
+
+    # Predict Objective metrics
+    objective_model = SQUIM_OBJECTIVE.get_model()
+
+    # Compare model output with ground truth for distorted speech with 20dB SNR
+    stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(WAVEFORM_DISTORTED[0:1, :])
+    print(f'Estimated metrics for distorted speech at {snr_dbs[0]}dB are\n')
+    print(f'STOI: {stoi_hyp[0]}')
+    print(f'PESQ: {pesq_hyp[0]}')
+    print(f'SI-SDR: {si_sdr_hyp[0]}\n')
+
+    pesq_ref = pesq(16000, WAVEFORM_SPEECH[0].numpy(), WAVEFORM_DISTORTED[0].numpy(), mode='wb')
+    stoi_ref = stoi(
+        WAVEFORM_SPEECH[0].numpy(), WAVEFORM_DISTORTED[0].numpy(), 16000, extended=False
+    )
+    si_sdr_ref = si_snr(WAVEFORM_DISTORTED[0:1], WAVEFORM_SPEECH)
+    print(f'Reference metrics for distorted speech at {snr_dbs[0]}dB are\n')
+    print(f'STOI: {stoi_ref}')
+    print(f'PESQ: {pesq_ref}')
+    print(f'SI-SDR: {si_sdr_ref}')
+
+    # Compare model output with ground truth for distorted speech with -5dB SNR
+    stoi_hyp, pesq_hyp, si_sdr_hyp = objective_model(WAVEFORM_DISTORTED[1:2, :])
+    print(f'Estimated metrics for distorted speech at {snr_dbs[1]}dB are\n')
+    print(f'STOI: {stoi_hyp[0]}')
+    print(f'PESQ: {pesq_hyp[0]}')
+    print(f'SI-SDR: {si_sdr_hyp[0]}\n')
+
+    pesq_ref = pesq(16000, WAVEFORM_SPEECH[0].numpy(), WAVEFORM_DISTORTED[1].numpy(), mode='wb')
+    stoi_ref = stoi(
+        WAVEFORM_SPEECH[0].numpy(), WAVEFORM_DISTORTED[1].numpy(), 16000, extended=False
+    )
+    si_sdr_ref = si_snr(WAVEFORM_DISTORTED[1:2], WAVEFORM_SPEECH)
+    print(f'Reference metrics for distorted speech at {snr_dbs[1]}dB are\n')
+    print(f'STOI: {stoi_ref}')
+    print(f'PESQ: {pesq_ref}')
+    print(f'SI-SDR: {si_sdr_ref}')
