@@ -10,7 +10,7 @@ import torchaudio
 import torchaudio.functional as F
 from pesq import pesq
 from pystoi import stoi
-from torchaudio.pipelines import SQUIM_OBJECTIVE
+from torchaudio.pipelines import SQUIM_OBJECTIVE, SQUIM_SUBJECTIVE
 from torchaudio.utils import download_asset
 
 
@@ -32,6 +32,23 @@ def si_snr(estimate, reference, epsilon=1e-8):
 
     si_snr = 10 * torch.log10(reference_pow) - 10 * torch.log10(error_pow)
     return si_snr.item()
+
+
+def predict_mos(waveform, title, sample_rate=16000):
+    wav_numpy = waveform.numpy()
+
+    sample_size = waveform.shape[1]
+    time_axis = torch.arange(0, sample_size) / sample_rate
+
+    figure, axes = plt.subplots(2, 1)
+    axes[0].plot(time_axis, wav_numpy[0], linewidth=1)
+    axes[0].grid(True)
+    axes[1].specgram(wav_numpy[0], Fs=sample_rate)
+    figure.suptitle(title)
+
+    subjective_model = SQUIM_SUBJECTIVE.get_model()
+    mos = subjective_model(waveform)
+    print(f'Predicted MOS for {title} is {mos[0]}')
 
 
 def plot(waveform, title, sample_rate=16000):
