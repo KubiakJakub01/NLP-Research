@@ -21,12 +21,14 @@ torch = {version = "2.2.0+cu118", source = "torch"}
 torchaudio = {version = "2.2.0+cu118", source = "torch"}
 pesq = "^0.0.4"
 pystoi = "^0.4.1"
+gradio = "^4.19.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.5.1"
-ruff = "0.2.1"
+ruff = "0.2.2"
 pre-commit = "3.6.0"
 pylint = "2.17.5"
+ipykernel = "^6.29.3"
 
 [[tool.poetry.source]]
 name = "PyPI"
