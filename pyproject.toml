@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "nlp"
+name = "nlp_research"
 version = "0.1.0"
 description = "NLP Research"
 authors = ["KubiakJakub01 <kubiak.jakub01@gmail.com>"]
