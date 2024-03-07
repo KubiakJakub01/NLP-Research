@@ -14,7 +14,7 @@ from torchaudio.pipelines import SQUIM_OBJECTIVE, SQUIM_SUBJECTIVE
 from torchaudio.utils import download_asset
 
 
-def si_snr(estimate, reference, epsilon=1e-8):
+def si_snr_fn(estimate, reference, epsilon=1e-8):
     estimate = estimate - estimate.mean()
     reference = reference - reference.mean()
     reference_pow = reference.pow(2).mean(axis=1, keepdim=True)
@@ -64,7 +64,7 @@ def plot(waveform, title, sample_rate=16000):
     figure.suptitle(title)
 
 
-if __name__ == '__main__':
+def main():
     # Download assets
     SAMPLE_SPEECH = download_asset(
         'tutorial-assets/Lab41-SRI-VOiCES-src-sp0307-ch127535-sg0042.wav'
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     stoi_ref = stoi(
         WAVEFORM_SPEECH[0].numpy(), WAVEFORM_DISTORTED[0].numpy(), 16000, extended=False
     )
-    si_sdr_ref = si_snr(WAVEFORM_DISTORTED[0:1], WAVEFORM_SPEECH)
+    si_sdr_ref = si_snr_fn(WAVEFORM_DISTORTED[0:1], WAVEFORM_SPEECH)
     print(f'Reference metrics for distorted speech at {snr_dbs[0]}dB are\n')
     print(f'STOI: {stoi_ref}')
     print(f'PESQ: {pesq_ref}')
@@ -124,8 +124,12 @@ if __name__ == '__main__':
     stoi_ref = stoi(
         WAVEFORM_SPEECH[0].numpy(), WAVEFORM_DISTORTED[1].numpy(), 16000, extended=False
     )
-    si_sdr_ref = si_snr(WAVEFORM_DISTORTED[1:2], WAVEFORM_SPEECH)
+    si_sdr_ref = si_snr_fn(WAVEFORM_DISTORTED[1:2], WAVEFORM_SPEECH)
     print(f'Reference metrics for distorted speech at {snr_dbs[1]}dB are\n')
     print(f'STOI: {stoi_ref}')
     print(f'PESQ: {pesq_ref}')
     print(f'SI-SDR: {si_sdr_ref}')
+
+
+if __name__ == '__main__':
+    main()

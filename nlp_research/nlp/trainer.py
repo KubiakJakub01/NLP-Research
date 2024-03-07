@@ -12,7 +12,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from .utils import log_info
+from ..utils import log_info
 
 
 class NLPTrainer(Trainer):

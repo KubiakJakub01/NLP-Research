@@ -34,7 +34,6 @@ class GPT2LMHeadModel(GPT2Model):
         head_mask=None,
         inputs_embeds=None,
         labels=None,
-        use_cache=None,
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
@@ -76,8 +75,7 @@ class GPT2LMHeadModel(GPT2Model):
             return ((loss,) + output) if loss is not None else output
 
         return BaseModelOutputWithPastAndCrossAttentions(
-            loss=loss,
-            logits=lm_logits,
+            last_hidden_state=outputs.last_hidden_state,
             past_key_values=outputs.past_key_values,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
@@ -115,7 +113,6 @@ class GPT2LMHeadModelWithLatent(GPT2Model):
         latent=None,
         inputs_embeds=None,
         labels=None,
-        use_cache=None,
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
@@ -165,10 +162,8 @@ class GPT2LMHeadModelWithLatent(GPT2Model):
             return ((loss,) + output) if loss is not None else output
 
         return BaseModelOutputWithPastAndCrossAttentions(
-            loss=loss,
-            logits=lm_logits,
+            last_hidden_state=outputs.last_hidden_state,
             past_key_values=outputs.past_key_values,
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
-            cross_attentions=outputs.cross_attentions,
         )

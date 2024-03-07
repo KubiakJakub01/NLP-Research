@@ -1,7 +1,10 @@
-"""Utility functions for the project."""
+"""Utility functions for NLP research."""
 import logging
+import random
 
 import coloredlogs
+import numpy as np
+import torch
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -33,3 +36,11 @@ def log_warning(*args, **kwargs):
 def log_error(*args, **kwargs):
     """Log an error message."""
     logger.error(*args, **kwargs)
+
+
+def seed(seed_number: int):
+    """Set the random seed for reproducibility."""
+    random.seed(seed_number)
+    np.random.seed(seed_number)
+    torch.manual_seed(seed_number)
+    torch.backends.cudnn.deterministic = True

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "nlp"
+name = "nlp_research"
 version = "0.1.0"
 description = "NLP Research"
 authors = ["KubiakJakub01 <kubiak.jakub01@gmail.com>"]
@@ -21,6 +21,8 @@ torch = {version = "2.2.0+cu118", source = "torch"}
 torchaudio = {version = "2.2.0+cu118", source = "torch"}
 pesq = "^0.0.4"
 pystoi = "^0.4.1"
+sox = "^1.4.1"
+matplotlib = "^3.8.3"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.5.1"
@@ -44,7 +46,10 @@ disable = ["missing-docstring",
             "too-many-instance-attributes",
             "too-many-arguments",
             "method-hidden",
-            "too-many-locals"]
+            "too-many-locals",
+            "consider-using-from-import",
+            "relative-beyond-top-level",
+            "too-many-ancestors"]
 fail-under = 10.0
 generated-members=["numpy.*","torch.*"]
 
