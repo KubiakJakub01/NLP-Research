@@ -64,7 +64,7 @@ def plot(waveform, title, sample_rate=16000):
     figure.suptitle(title)
 
 
-if __name__ == '__main__':
+def main():
     # Download assets
     SAMPLE_SPEECH = download_asset(
         'tutorial-assets/Lab41-SRI-VOiCES-src-sp0307-ch127535-sg0042.wav'
@@ -129,3 +129,7 @@ if __name__ == '__main__':
     print(f'STOI: {stoi_ref}')
     print(f'PESQ: {pesq_ref}')
     print(f'SI-SDR: {si_sdr_ref}')
+
+
+if __name__ == '__main__':
+    main()

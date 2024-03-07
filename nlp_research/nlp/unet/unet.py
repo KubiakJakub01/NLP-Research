@@ -18,32 +18,32 @@ class UNet(nn.Module):
 
         self.hparams = hparams
         features = self.hparams.features
-        self.encoder1 = UNet._block(self.hparams.in_channels, features, name='enc1')
+        self.encoder1 = UNet._block(self.hparams.in_channels, features)
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.encoder2 = UNet._block(features, features * 2, name='enc2')
+        self.encoder2 = UNet._block(features, features * 2)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.encoder3 = UNet._block(features * 2, features * 4, name='enc3')
+        self.encoder3 = UNet._block(features * 2, features * 4)
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.encoder4 = UNet._block(features * 4, features * 8, name='enc4')
+        self.encoder4 = UNet._block(features * 4, features * 8)
         self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        self.bottleneck = UNet._block(features * 8, features * 16, name='bottleneck')
+        self.bottleneck = UNet._block(features * 8, features * 16)
 
         self.upconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)
-        self.decoder4 = UNet._block((features * 8) * 2, features * 8, name='dec4')
+        self.decoder4 = UNet._block((features * 8) * 2, features * 8)
         self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
-        self.decoder3 = UNet._block((features * 4) * 2, features * 4, name='dec3')
+        self.decoder3 = UNet._block((features * 4) * 2, features * 4)
         self.upconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
-        self.decoder2 = UNet._block((features * 2) * 2, features * 2, name='dec2')
+        self.decoder2 = UNet._block((features * 2) * 2, features * 2)
         self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
-        self.decoder1 = UNet._block(features * 2, features, name='dec1')
+        self.decoder1 = UNet._block(features * 2, features)
 
         self.conv = nn.Conv2d(
             in_channels=features, out_channels=self.hparams.out_channels, kernel_size=1
         )
 
     @staticmethod
-    def _block(in_channels: int, features: int, name: str):
+    def _block(in_channels: int, features: int):
         """U-Net block.
 
         Args:
