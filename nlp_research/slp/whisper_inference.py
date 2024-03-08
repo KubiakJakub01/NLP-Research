@@ -2,6 +2,8 @@ import argparse
 
 from faster_whisper import WhisperModel
 
+from ..utils import log_info
+
 
 def get_params():
     parser = argparse.ArgumentParser()
@@ -31,7 +33,7 @@ if __name__ == '__main__':
     # Run on GPU with FP16
     model = WhisperModel(params.model_size, device=params.device, compute_type=params.dtype)
 
-    print(f'Load model with size: {params.model_size}')
+    log_info('Load model with size: %s', params.model_size)
 
     # or run on GPU with INT8
     # model = WhisperModel(model_size, device="cuda", compute_type="int8_float16")
@@ -40,7 +42,9 @@ if __name__ == '__main__':
 
     segments, info = model.transcribe(params.audio_fp, beam_size=params.beam_size)
 
-    print(f'Detected language {info.language} with probability {info.language_probability}')
+    log_info(
+        'Detected language %s with probability %.2f', {info.language}, {info.language_probability}
+    )
 
     for segment in segments:
-        print(f'[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}')
+        log_info('[%.2fs -> %.2fs] %s', segment.start, segment.end, segment.text)
