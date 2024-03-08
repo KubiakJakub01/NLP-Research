@@ -13,6 +13,17 @@ To install and set up the project, you can use the Python Poetry package manager
    curl -sSL https://install.python-poetry.org | python3 -
     ```
 
+   Then, export the Poetry binary directory to your system's PATH:
+   ```shell
+   export PATH="$HOME/.local/bin:$PATH"
+    ```
+   Optionaly you can add this line to your `~/.bashrc`.
+
+   Then you can run the following command to apply the changes:
+   ```shell
+   source ~/.bashrc
+   ```
+
 3. Clone the repository to your local machine:
 
    ```shell
