@@ -28,13 +28,15 @@ def get_params():
         '-s',
         type=str,
         default='base',
-        choices=['tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2', 'large-v3'],
+        choices=AVALIABLE_MODELS,
         help='Whisper model size',
     )
     parser.add_argument(
         '--device', '-d', type=str, default='cuda', choices=['cuda', 'cpu'], help='Device to use'
     )
-    parser.add_argument('--dtype', type=str, default='float16', help='Data type to use')
+    parser.add_argument(
+        '--dtype', type=str, default='float16', choices=AVALIABLE_DTYPES, help='Data type to use'
+    )
     parser.add_argument('--beam_size', type=int, default=5, help='Number of beams during inference')
     return parser.parse_args()
 
