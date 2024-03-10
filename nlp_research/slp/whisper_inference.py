@@ -4,6 +4,18 @@ from faster_whisper import WhisperModel
 
 from ..utils import log_info
 
+AVALIABLE_MODELS = ['tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2', 'large-v3']
+AVALIABLE_DTYPES = [
+    'int8',
+    'int8_float32',
+    'int8_float16',
+    'int8_bfloat16',
+    'int16',
+    'float16',
+    'bfloat16',
+    'float32',
+]
+
 
 def get_params():
     parser = argparse.ArgumentParser()
