@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from faster_whisper import WhisperModel
 
@@ -20,7 +21,18 @@ AVALIABLE_DTYPES = [
 def get_params():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--input_dir', '-a', required=True, type=str, help='Path to dir with audios'
+        '--input_dir', '-a', required=True, type=Path, help='Path to dir with audios'
+    )
+    parser.add_argument(
+        '--output_fp',
+        '-o',
+        type=Path,
+        default=None,
+        help='Path to output file. \
+            If path is `None` then output will be printed to stdout. \
+            If path extension is `.json` then output will be saved in json format with timestamps. \
+            If path extension is `.tsv` then output will be saved \
+            in `tsv` format without timestamps.',
     )
     parser.add_argument('--audio_ext', '-e', type=str, default='.wav', help='Audio extension')
     parser.add_argument(
@@ -44,15 +56,9 @@ def get_params():
 if __name__ == '__main__':
     params = get_params()
 
-    # Run on GPU with FP16
     model = WhisperModel(params.model_size, device=params.device, compute_type=params.dtype)
 
     log_info('Load model with size: %s', params.model_size)
-
-    # or run on GPU with INT8
-    # model = WhisperModel(model_size, device="cuda", compute_type="int8_float16")
-    # or run on CPU with INT8
-    # model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
     segments, info = model.transcribe(params.audio_fp, beam_size=params.beam_size)
 
