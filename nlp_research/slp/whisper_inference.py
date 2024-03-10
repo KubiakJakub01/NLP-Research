@@ -2,8 +2,9 @@ import argparse
 from pathlib import Path
 
 from faster_whisper import WhisperModel
+from tqdm import tqdm
 
-from ..utils import log_info
+from ..utils import log_debug, log_info
 
 AVALIABLE_MODELS = ['tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2', 'large-v3']
 AVALIABLE_DTYPES = [
@@ -44,6 +45,14 @@ def get_params():
         help='Whisper model size',
     )
     parser.add_argument(
+        '--lang',
+        '-l',
+        type=str,
+        default=None,
+        help='Language to use for inference. \
+            If `None` then language will be detected automatically',
+    )
+    parser.add_argument(
         '--device', '-d', type=str, default='cuda', choices=['cuda', 'cpu'], help='Device to use'
     )
     parser.add_argument(
@@ -53,18 +62,40 @@ def get_params():
     return parser.parse_args()
 
 
+def main(
+    model_size: str,
+    device: str,
+    dtype: str,
+    input_dir: Path,
+    output_fp: Path,
+    lang: str,
+    audio_ext: str,
+    beam_size: int,
+):
+    model = WhisperModel(model_size, device=device, compute_type=dtype)
+    log_info('Load model with size: %s', model_size)
+
+    audio_fps = list(input_dir.glob(f'*{audio_ext}'))
+    log_info('Found %s audio files', len(audio_fps))
+
+    for audio_fp in tqdm(audio_fps, desc='Inference'):
+        segments, info = model.transcribe(audio_fp.as_posix(), beam_size=beam_size, lang=lang)
+
+        log_debug(
+            'Detected language %s with probability %.2f',
+            {info.language},
+            {info.language_probability},
+        )
+
+        for segment in segments:
+            if output_fp is None:
+                log_info('[%.2fs -> %.2fs] %s', segment.start, segment.end, segment.text)
+            elif output_fp.suffix == '.json':
+                output_fp.write_text(segment.to_json())
+            elif output_fp.suffix == '.tsv':
+                output_fp.write_text(segment.to_tsv())
+
+
 if __name__ == '__main__':
     params = get_params()
-
-    model = WhisperModel(params.model_size, device=params.device, compute_type=params.dtype)
-
-    log_info('Load model with size: %s', params.model_size)
-
-    segments, info = model.transcribe(params.audio_fp, beam_size=params.beam_size)
-
-    log_info(
-        'Detected language %s with probability %.2f', {info.language}, {info.language_probability}
-    )
-
-    for segment in segments:
-        log_info('[%.2fs -> %.2fs] %s', segment.start, segment.end, segment.text)
+    main(**(vars(params)))
