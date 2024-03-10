@@ -22,7 +22,7 @@ AVALIABLE_DTYPES = [
 def get_params():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--input_dir', '-a', required=True, type=Path, help='Path to dir with audios'
+        '--input_dir', '-i', required=True, type=Path, help='Path to dir with audios'
     )
     parser.add_argument(
         '--output_fp',
@@ -78,13 +78,13 @@ def main(
     audio_fps = list(input_dir.glob(f'*{audio_ext}'))
     log_info('Found %s audio files', len(audio_fps))
 
-    for audio_fp in tqdm(audio_fps, desc='Inference'):
-        segments, info = model.transcribe(audio_fp.as_posix(), beam_size=beam_size, lang=lang)
+    for audio_fp in tqdm(audio_fps[:10], desc='Inference'):
+        segments, info = model.transcribe(audio_fp.as_posix(), beam_size=beam_size, language=lang)
 
         log_debug(
             'Detected language %s with probability %.2f',
-            {info.language},
-            {info.language_probability},
+            info.language,
+            info.language_probability,
         )
 
         for segment in segments:
