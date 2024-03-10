@@ -1,4 +1,5 @@
 import argparse
+import json
 from pathlib import Path
 
 from faster_whisper import WhisperModel
@@ -25,15 +26,18 @@ def get_params():
         '--input_dir', '-i', required=True, type=Path, help='Path to dir with audios'
     )
     parser.add_argument(
-        '--output_fp',
+        '--output_dir',
         '-o',
         type=Path,
         default=None,
-        help='Path to output file. \
-            If path is `None` then output will be printed to stdout. \
-            If path extension is `.json` then output will be saved in json format with timestamps. \
-            If path extension is `.tsv` then output will be saved \
-            in `tsv` format without timestamps.',
+        help='Path to output dir. If `None` then it will print the output to stdout',
+    )
+    parser.add_argument(
+        '--output_type',
+        type=str,
+        default='json',
+        choices=['json', 'tsv', 'stdout'],
+        help='Output type',
     )
     parser.add_argument('--audio_ext', '-e', type=str, default='.wav', help='Audio extension')
     parser.add_argument(
@@ -62,12 +66,31 @@ def get_params():
     return parser.parse_args()
 
 
+def segments_to_json(segments):
+    json_element_list = []
+    for segment in segments:
+        json_element_list.append(
+            {
+                'id': segment.id,
+                'start': segment.start,
+                'end': segment.end,
+                'text': segment.text,
+            }
+        )
+    return json_element_list
+
+
+def segments_to_tsv(segments):
+    return ' '.join([segment.text for segment in segments])
+
+
 def main(
     model_size: str,
     device: str,
     dtype: str,
     input_dir: Path,
-    output_fp: Path,
+    output_dir: Path,
+    output_type: str,
     lang: str,
     audio_ext: str,
     beam_size: int,
@@ -78,22 +101,50 @@ def main(
     audio_fps = list(input_dir.glob(f'*{audio_ext}'))
     log_info('Found %s audio files', len(audio_fps))
 
-    for audio_fp in tqdm(audio_fps[:10], desc='Inference'):
-        segments, info = model.transcribe(audio_fp.as_posix(), beam_size=beam_size, language=lang)
+    if output_dir is not None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_tsv_fp = output_dir / 'transcriptions.tsv'
+        if output_type == 'tsv':
+            output_tsv_fp.write_text('FileID\tTranscription\n')
 
-        log_debug(
-            'Detected language %s with probability %.2f',
-            info.language,
-            info.language_probability,
-        )
+    with tqdm(total=len(audio_fps), desc='Inference') as pbar:
+        for audio_fp in audio_fps:
+            segments, info = model.transcribe(
+                audio_fp.as_posix(), beam_size=beam_size, language=lang
+            )
 
-        for segment in segments:
-            if output_fp is None:
-                log_info('[%.2fs -> %.2fs] %s', segment.start, segment.end, segment.text)
-            elif output_fp.suffix == '.json':
-                output_fp.write_text(segment.to_json())
-            elif output_fp.suffix == '.tsv':
-                output_fp.write_text(segment.to_tsv())
+            log_debug(
+                'Detected language %s with probability %.2f',
+                info.language,
+                info.language_probability,
+            )
+
+            if output_type == 'stdout':
+                log_info('File: %s', audio_fp)
+                for segment in segments:
+                    log_info(
+                        '%d [%.2fs -> %.2fs] %s',
+                        segment.id,
+                        segment.start,
+                        segment.end,
+                        segment.text,
+                    )
+            elif output_type == 'json':
+                json_output_fp = output_dir / audio_fp.with_suffix('.json').name
+                with json_output_fp.open('w', encoding='utf-8') as f:
+                    json.dump(
+                        {
+                            'audio_fp': audio_fp.as_posix(),
+                            'segments': segments_to_json(segments),
+                        },
+                        f,
+                        indent=4,
+                    )
+                pbar.update(1)
+            elif output_type == 'tsv':
+                with output_tsv_fp.open('a', encoding='utf-8') as f:
+                    f.write(f'{audio_fp.stem}\t{segments_to_tsv(segments)}\n')
+                pbar.update(1)
 
 
 if __name__ == '__main__':
