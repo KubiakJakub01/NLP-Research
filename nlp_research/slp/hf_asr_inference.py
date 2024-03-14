@@ -2,6 +2,7 @@
 import argparse
 from pathlib import Path
 
+from tqdm import tqdm
 from transformers import pipeline
 
 from ..utils import log_info
@@ -86,15 +87,17 @@ def main(
         output_fp.parent.mkdir(parents=True, exist_ok=True)
         with open(output_fp, 'w') as fh:
             fh.write('AudioName\tTranscription\n')
-    for audio_fp, transcription in zip(
-        audio_dataset.audio_fps, pipe(audio_dataset, batch_size=batch_size), strict=False
-    ):
-        transcription = transcription['text']
-        if output_fp:
-            with open(output_fp, 'a') as fh:
-                fh.write(f'{audio_fp.name}\t{transcription}\n')
-        else:
-            log_info('%s\t%s', audio_fp.name, transcription)
+    with tqdm(total=len(audio_dataset), desc='Inference') as pbar:
+        for audio_fp, transcription in zip(
+            audio_dataset.audio_fps, pipe(audio_dataset, batch_size=batch_size), strict=False
+        ):
+            transcription = transcription['text']
+            if output_fp:
+                pbar.update(1)
+                with open(output_fp, 'a') as fh:
+                    fh.write(f'{audio_fp.name}\t{transcription}\n')
+            else:
+                log_info('%s\t%s', audio_fp.name, transcription)
 
 
 if __name__ == '__main__':
