@@ -85,7 +85,7 @@ def main(
     # Inference
     if output_fp:
         output_fp.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_fp, 'w') as fh:
+        with open(output_fp, 'w', encoding='utf-8') as fh:
             fh.write('AudioName\tTranscription\n')
     with tqdm(total=len(audio_dataset), desc='Inference') as pbar:
         for audio_fp, transcription in zip(
@@ -94,7 +94,7 @@ def main(
             transcription = transcription['text']
             if output_fp:
                 pbar.update(1)
-                with open(output_fp, 'a') as fh:
+                with open(output_fp, 'a', encoding='utf-8') as fh:
                     fh.write(f'{audio_fp.name}\t{transcription}\n')
             else:
                 log_info('%s\t%s', audio_fp.name, transcription)
