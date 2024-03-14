@@ -5,6 +5,7 @@ from pathlib import Path
 from transformers import pipeline
 
 from ..utils import log_info
+from .data import AudioDataset
 
 AVALIABLE_MODELS = [
     'openai/whisper-large-v3',
@@ -24,8 +25,9 @@ def get_params():
     parser.add_argument(
         '--output_fp',
         '-o',
+        default=None,
         type=Path,
-        help='Path to output `.tsv` file',
+        help='Path to output `.tsv` file. If `None` then output will be printed to the console.',
     )
     parser.add_argument('--audio_ext', '-e', type=str, default='.wav', help='Audio extension')
     parser.add_argument(
@@ -59,7 +61,7 @@ def get_params():
 
 def main(
     input_dir: Path,
-    output_fp: Path,
+    output_fp: Path | None,
     audio_ext: str,
     model_size: str,
     lang: str,
@@ -75,15 +77,24 @@ def main(
         generate_kwargs={'language': lang},
     )
 
-    audio_fp_list = list(input_dir.glob(f'*{audio_ext}'))
-    log_info(f'Found {len(audio_fp_list)} files')
+    # Load the dataset
+    audio_dataset = AudioDataset(input_dir, audio_ext)
+    log_info('Found %d audio files', len(audio_dataset))
 
-    output_fp.parent.mkdir(exist_ok=True, parents=True)
-
-    for audio_fp in audio_fp_list:
-        transcription = pipe(audio_fp.as_posix(), batch_size=batch_size)['text']
-        log_info(f'Processed {audio_fp}')
-        log_info(f'{transcription=}')
+    # Inference
+    if output_fp:
+        output_fp.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_fp, 'w') as fh:
+            fh.write('AudioName\tTranscription\n')
+    for audio_fp, transcription in zip(
+        audio_dataset.audio_fps, pipe(audio_dataset, batch_size=batch_size), strict=False
+    ):
+        transcription = transcription['text']
+        if output_fp:
+            with open(output_fp, 'a') as fh:
+                fh.write(f'{audio_fp.name}\t{transcription}\n')
+        else:
+            log_info('%s\t%s', audio_fp.name, transcription)
 
 
 if __name__ == '__main__':
