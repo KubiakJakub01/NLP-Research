@@ -5,6 +5,7 @@ import random
 import coloredlogs
 import numpy as np
 import torch
+import torchaudio.functional as F
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -44,3 +45,12 @@ def seed(seed_number: int):
     np.random.seed(seed_number)
     torch.manual_seed(seed_number)
     torch.backends.cudnn.deterministic = True
+
+
+def normalize_audio(audio: torch.Tensor, orginal_sr: int, target_sr: int) -> torch.Tensor:
+    """Normalize audio to momo channel and target sample rate."""
+    if audio.shape[0] > 1:
+        audio = audio.mean(0, keepdim=True)
+    if orginal_sr != target_sr:
+        audio = F.resample(audio, orginal_sr, target_sr)
+    return audio
