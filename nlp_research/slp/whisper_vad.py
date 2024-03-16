@@ -1,5 +1,6 @@
 """Module for whisper voice activity detection (VAD) using the WhisperX"""
 import argparse
+import json
 from pathlib import Path
 
 import whisperx
@@ -35,7 +36,7 @@ def get_params():
         '--output_type',
         type=str,
         default='json',
-        choices=['json', 'tsv', 'stdout'],
+        choices=['json', 'stdout'],
         help='Output type',
     )
     parser.add_argument('--audio_ext', '-e', type=str, default='.wav', help='Audio extension')
@@ -95,11 +96,10 @@ def main(
     if align:
         model_a, metadata = whisperx.load_align_model(language_code=lang, device=device)
     audio_fp_list = list(input_dir.glob(f'*{audio_ext}'))
-    for audio_fp in audio_fp_list[:3]:
+    for audio_fp in audio_fp_list:
         audio = whisperx.load_audio(audio_fp)
         result = model.transcribe(audio, batch_size=batch_size)
         log_info('Transcribed audio: %s', audio_fp)
-        log_info('Result: %s', result)
         if align:
             result = whisperx.align(
                 result['segments'],
@@ -107,9 +107,9 @@ def main(
                 metadata,
                 audio,
                 params.device,
-                return_char_alignments=True,
+                return_char_alignments=False,
             )
-            log_info('Aligned result: %s', result)
+            log_info('Aligned result: %s', json.dumps(result['segments'], indent=4))
 
 
 if __name__ == '__main__':
