@@ -25,6 +25,7 @@ sox = "^1.4.1"
 matplotlib = "^3.8.3"
 faster-whisper = "^1.0.1"
 ffmpeg = "^1.4"
+whisperx = {git = "https://github.com/m-bain/whisperX.git"}
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.5.1"
