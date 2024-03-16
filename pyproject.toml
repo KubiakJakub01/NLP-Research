@@ -23,7 +23,7 @@ pesq = "^0.0.4"
 pystoi = "^0.4.1"
 sox = "^1.4.1"
 matplotlib = "^3.8.3"
-faster-whisper = "^1.0.1"
+faster-whisper = "1.0.0"
 ffmpeg = "^1.4"
 whisperx = {git = "https://github.com/m-bain/whisperX.git"}
 
