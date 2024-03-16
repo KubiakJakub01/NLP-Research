@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import whisperx
+from tqdm import tqdm
 
 from ..utils import log_info
 
@@ -35,7 +36,7 @@ def get_params():
     parser.add_argument(
         '--output_type',
         type=str,
-        default='json',
+        default='stdout',
         choices=['json', 'stdout'],
         help='Output type',
     )
@@ -72,12 +73,13 @@ def get_params():
         default=16,
         help='Batch size for inference. Reduce if low on GPU mem',
     )
-    parser.add_argument(
-        '--align',
-        action='store_true',
-        help='If True then align the output using the WhisperX aligner',
-    )
-    return parser.parse_args()
+
+    def _valid_params(params):
+        if params.output_type == 'json' and params.output_dir is None:
+            parser.error('Cannot use `json` as output dir is not provided')
+        return params
+
+    return _valid_params(parser.parse_args())
 
 
 def main(
@@ -90,26 +92,34 @@ def main(
     device: str,
     dtype: str,
     batch_size: int,
-    align: bool,
 ):
     model = whisperx.load_model(model_size, device, compute_type=dtype)
-    if align:
-        model_a, metadata = whisperx.load_align_model(language_code=lang, device=device)
+    model_a, metadata = whisperx.load_align_model(language_code=lang, device=device)
     audio_fp_list = list(input_dir.glob(f'*{audio_ext}'))
-    for audio_fp in audio_fp_list:
-        audio = whisperx.load_audio(audio_fp)
-        result = model.transcribe(audio, batch_size=batch_size)
-        log_info('Transcribed audio: %s', audio_fp)
-        if align:
+
+    if output_dir is not None:
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+    with tqdm(total=len(audio_fp_list)) as pbar:
+        for audio_fp in audio_fp_list:
+            audio = whisperx.load_audio(audio_fp)
+            result = model.transcribe(audio, batch_size=batch_size, language=lang)
             result = whisperx.align(
                 result['segments'],
                 model_a,
                 metadata,
                 audio,
-                params.device,
+                device,
                 return_char_alignments=False,
             )
-            log_info('Aligned result: %s', json.dumps(result['segments'], indent=4))
+            if output_type == 'json':
+                pbar.set_postfix_str(f'Processing {audio_fp.stem}')
+                output_fp = output_dir / f'{audio_fp.stem}.json'
+                with open(output_fp, 'w') as f:
+                    json.dump(result['segments'], f, indent=4)
+            elif output_type == 'stdout':
+                log_info('Processing %s', audio_fp.stem)
+                log_info('Aligned result: %s', json.dumps(result['segments'], indent=4))
 
 
 if __name__ == '__main__':
