@@ -115,7 +115,7 @@ def main(
             if output_type == 'json':
                 pbar.set_postfix_str(f'Processing {audio_fp.stem}')
                 output_fp = output_dir / f'{audio_fp.stem}.json'
-                with open(output_fp, 'w') as f:
+                with open(output_fp, 'w', encoding='utf-8') as f:
                     json.dump(result['segments'], f, indent=4)
             elif output_type == 'stdout':
                 log_info('Processing %s', audio_fp.stem)
@@ -123,5 +123,4 @@ def main(
 
 
 if __name__ == '__main__':
-    params = get_params()
-    main(**(vars(params)))
+    main(**(vars(get_params())))
