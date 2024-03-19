@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch
 from tqdm import tqdm
-from transformers import AutoModelForSpeechSeq2Seq, SeamlessM4Tv2Model, pipeline
+from transformers import AutoModelForSpeechSeq2Seq, AutoTokenizer, SeamlessM4Tv2Model, pipeline
 
 from ..utils import log_info
 from .data import AudioDataset
@@ -73,8 +73,11 @@ def get_params():
 
 def get_pipeline(model_id: str, lang: str | None = None):
     if torch.cuda.is_available():
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        device = 'cuda'
+        torch_dtype = torch.float16
+    else:
+        device = 'cpu'
+        torch_dtype = torch.float32
 
     model_basename = model_id.split('/')[-1]
     if 'whisper' in model_basename:
@@ -89,9 +92,11 @@ def get_pipeline(model_id: str, lang: str | None = None):
     else:
         raise ValueError(f'Unknown model: {model_id}')
 
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
     return pipeline(
         'automatic-speech-recognition',
         model=model,
+        tokenizer=tokenizer,
         device=device,
         max_new_tokens=256,
         chunk_length_s=30,
