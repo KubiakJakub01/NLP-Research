@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch
 from tqdm import tqdm
-from transformers import AutoModelForSpeechSeq2Seq, pipeline
+from transformers import AutoModelForSpeechSeq2Seq, SeamlessM4Tv2Model, pipeline
 
 from ..utils import log_info
 from .data import AudioDataset
@@ -17,6 +17,16 @@ AVALIABLE_MODELS = [
     'openai/whisper-base',
     'openai/whisper-tiny',
 ]
+M4T_LANG_DICT = {
+    'de': 'deu',
+    'en': 'eng',
+    'es': 'spa',
+    'fr': 'fra',
+    'it': 'ita',
+    'ko': 'kor',
+    'nl': 'nld',
+    'pl': 'pol',
+}
 
 
 def get_params():
@@ -72,6 +82,9 @@ def get_pipeline(model_id: str, lang: str | None = None):
             model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
         )
         lang = lang.split('-')[0] if lang else None
+    elif 'm4tv2' in model_basename:
+        model = SeamlessM4Tv2Model.from_pretrained(model_id, torch_dtype=torch_dtype)
+        lang = lang.split('-')[0] if lang else None
     else:
         raise ValueError(f'Unknown model: {model_id}')
 
@@ -93,16 +106,9 @@ def main(
     model_id: str,
     lang: str,
     batch_size: int,
-    device: str,
 ):
     # Load the model
-    pipe = pipeline(
-        'automatic-speech-recognition',
-        model=model_id,
-        device=device,
-        chunk_length_s=30,
-        generate_kwargs={'language': lang},
-    )
+    pipe = get_pipeline(model_id, lang)
 
     # Load the dataset
     audio_dataset = AudioDataset(input_dir, audio_ext)
