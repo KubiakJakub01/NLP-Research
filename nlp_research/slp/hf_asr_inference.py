@@ -2,8 +2,9 @@
 import argparse
 from pathlib import Path
 
+import torch
 from tqdm import tqdm
-from transformers import pipeline
+from transformers import AutoModelForSpeechSeq2Seq, pipeline
 
 from ..utils import log_info
 from .data import AudioDataset
@@ -32,12 +33,12 @@ def get_params():
     )
     parser.add_argument('--audio_ext', '-e', type=str, default='.wav', help='Audio extension')
     parser.add_argument(
-        '--model_size',
-        '-s',
+        '--model_id',
+        '-m',
         type=str,
         default='openai/whisper-base',
         choices=AVALIABLE_MODELS,
-        help='Whisper model size',
+        help='Model name to use for inference',
     )
     parser.add_argument(
         '--batch_size',
@@ -60,11 +61,36 @@ def get_params():
     return parser.parse_args()
 
 
+def get_pipeline(model_id: str, lang: str | None = None):
+    if torch.cuda.is_available():
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+    model_basename = model_id.split('/')[-1]
+    if 'whisper' in model_basename:
+        model = AutoModelForSpeechSeq2Seq.from_pretrained(
+            model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+        )
+        lang = lang.split('-')[0] if lang else None
+    else:
+        raise ValueError(f'Unknown model: {model_id}')
+
+    return pipeline(
+        'automatic-speech-recognition',
+        model=model,
+        device=device,
+        max_new_tokens=256,
+        chunk_length_s=30,
+        torch_dtype=torch_dtype,
+        generate_kwargs={'language': lang},
+    )
+
+
 def main(
     input_dir: Path,
     output_fp: Path | None,
     audio_ext: str,
-    model_size: str,
+    model_id: str,
     lang: str,
     batch_size: int,
     device: str,
@@ -72,7 +98,7 @@ def main(
     # Load the model
     pipe = pipeline(
         'automatic-speech-recognition',
-        model=model_size,
+        model=model_id,
         device=device,
         chunk_length_s=30,
         generate_kwargs={'language': lang},
