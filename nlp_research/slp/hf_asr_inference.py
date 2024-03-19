@@ -81,10 +81,11 @@ def get_pipeline(model_id: str, lang: str | None = None):
         model = AutoModelForSpeechSeq2Seq.from_pretrained(
             model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
         )
-        lang = lang.split('-')[0] if lang else None
+        generate_kwargs = {'language': lang}
     elif 'm4tv2' in model_basename:
         model = SeamlessM4Tv2Model.from_pretrained(model_id, torch_dtype=torch_dtype)
-        lang = lang.split('-')[0] if lang else None
+        lang = M4T_LANG_DICT.get(lang)
+        generate_kwargs = {'src_lang': lang}
     else:
         raise ValueError(f'Unknown model: {model_id}')
 
@@ -95,7 +96,7 @@ def get_pipeline(model_id: str, lang: str | None = None):
         max_new_tokens=256,
         chunk_length_s=30,
         torch_dtype=torch_dtype,
-        generate_kwargs={'language': lang},
+        generate_kwargs=generate_kwargs,
     )
 
 
