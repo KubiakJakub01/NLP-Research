@@ -87,7 +87,7 @@ def get_pipeline(model_id: str, lang: str | None = None):
         generate_kwargs = {'language': lang}
     elif 'm4tv2' in model_basename:
         model = SeamlessM4Tv2Model.from_pretrained(model_id, torch_dtype=torch_dtype)
-        lang = M4T_LANG_DICT.get(lang)
+        lang = M4T_LANG_DICT[lang] if lang else None
         generate_kwargs = {'src_lang': lang}
     else:
         raise ValueError(f'Unknown model: {model_id}')
