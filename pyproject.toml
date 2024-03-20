@@ -6,7 +6,7 @@ authors = ["KubiakJakub01 <kubiak.jakub01@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry-exec-plugin.commands]
-ruff = "ruff check nlp"
+ruff = "ruff check nlp_research"
 mypy = "mypy --ignore-missing-imports nlp_research"
 pylint = "pylint --rcfile pyproject.toml nlp_research"
 
