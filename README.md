@@ -24,6 +24,11 @@ To install and set up the project, you can use the Python Poetry package manager
    source ~/.bashrc
    ```
 
+   Also you can install `poetry-exec-plugin` to enable running scripts from the `pyproject.toml` file:
+   ```shell
+   poetry self add poetry-exec-plugin
+   ```
+
 3. Clone the repository to your local machine:
 
    ```shell
