@@ -2,8 +2,9 @@
 import argparse
 from pathlib import Path
 
+import torch
 from tqdm import tqdm
-from transformers import pipeline
+from transformers import AutoModelForSpeechSeq2Seq, AutoTokenizer, SeamlessM4Tv2Model, pipeline
 
 from ..utils import log_info
 from .data import AudioDataset
@@ -16,6 +17,16 @@ AVALIABLE_MODELS = [
     'openai/whisper-base',
     'openai/whisper-tiny',
 ]
+M4T_LANG_DICT = {
+    'de': 'deu',
+    'en': 'eng',
+    'es': 'spa',
+    'fr': 'fra',
+    'it': 'ita',
+    'ko': 'kor',
+    'nl': 'nld',
+    'pl': 'pol',
+}
 
 
 def get_params():
@@ -32,12 +43,12 @@ def get_params():
     )
     parser.add_argument('--audio_ext', '-e', type=str, default='.wav', help='Audio extension')
     parser.add_argument(
-        '--model_size',
-        '-s',
+        '--model_id',
+        '-m',
         type=str,
         default='openai/whisper-base',
         choices=AVALIABLE_MODELS,
-        help='Whisper model size',
+        help='Model name to use for inference',
     )
     parser.add_argument(
         '--batch_size',
@@ -60,23 +71,50 @@ def get_params():
     return parser.parse_args()
 
 
+def get_pipeline(model_id: str, lang: str | None = None):
+    if torch.cuda.is_available():
+        device = 'cuda'
+        torch_dtype = torch.float16
+    else:
+        device = 'cpu'
+        torch_dtype = torch.float32
+
+    model_basename = model_id.split('/')[-1]
+    if 'whisper' in model_basename:
+        model = AutoModelForSpeechSeq2Seq.from_pretrained(
+            model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+        )
+        generate_kwargs = {'language': lang}
+    elif 'm4tv2' in model_basename:
+        model = SeamlessM4Tv2Model.from_pretrained(model_id, torch_dtype=torch_dtype)
+        lang = M4T_LANG_DICT[lang] if lang else None
+        generate_kwargs = {'src_lang': lang}
+    else:
+        raise ValueError(f'Unknown model: {model_id}')
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    return pipeline(
+        'automatic-speech-recognition',
+        model=model,
+        tokenizer=tokenizer,
+        device=device,
+        max_new_tokens=256,
+        chunk_length_s=30,
+        torch_dtype=torch_dtype,
+        generate_kwargs=generate_kwargs,
+    )
+
+
 def main(
     input_dir: Path,
     output_fp: Path | None,
     audio_ext: str,
-    model_size: str,
+    model_id: str,
     lang: str,
     batch_size: int,
-    device: str,
 ):
     # Load the model
-    pipe = pipeline(
-        'automatic-speech-recognition',
-        model=model_size,
-        device=device,
-        chunk_length_s=30,
-        generate_kwargs={'language': lang},
-    )
+    pipe = get_pipeline(model_id, lang)
 
     # Load the dataset
     audio_dataset = AudioDataset(input_dir, audio_ext)
