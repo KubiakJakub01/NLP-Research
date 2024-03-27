@@ -1,6 +1,9 @@
 import argparse
 from pathlib import Path
 
+import torchaudio
+from tqdm import tqdm
+
 from ..utils import normalize_audio
 
 
@@ -15,7 +18,14 @@ def get_params():
 
 
 def main(input_dir: Path, output_dir: Path, input_ext: str, output_ext: str, sample_rate: int):
-    normalize_audio(input_dir, output_dir, input_ext, output_ext, sample_rate)
+    audio_fps = list(input_dir.glob(f'*{input_ext}'))
+    for audio_fp in tqdm(audio_fps, desc='Normalizing audio'):
+        output_fp = (output_dir / audio_fp.stem).with_suffix(output_ext)
+
+        audio, orginal_sr = torchaudio.load(audio_fp)
+        audio = normalize_audio(audio, orginal_sr, sample_rate)
+
+        torchaudio.save(output_fp, audio, sample_rate)
 
 
 if __name__ == '__main__':
