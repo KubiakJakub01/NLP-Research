@@ -1,8 +1,10 @@
 import argparse
 from pathlib import Path
 
-import sox
+import torchaudio
 from tqdm import tqdm
+
+from ..utils import normalize_audio
 
 
 def get_params():
@@ -15,24 +17,17 @@ def get_params():
     return parser.parse_args()
 
 
-def normalize_audio(input_dir, output_dir, input_ext='.wav', output_ext='.wav', sample_rate=16000):
-    input_files = list(input_dir.glob(f'*{input_ext}'))
-    output_dir.mkdir(parents=True, exist_ok=True)
+def main(input_dir: Path, output_dir: Path, input_ext: str, output_ext: str, sample_rate: int):
+    audio_fps = list(input_dir.glob(f'*{input_ext}'))
+    for audio_fp in tqdm(audio_fps, desc='Normalizing audio'):
+        output_fp = (output_dir / audio_fp.stem).with_suffix(output_ext)
 
-    tfm = sox.Transformer()
-    tfm.set_output_format(file_type=input_ext.split('.')[-1], rate=sample_rate)
+        audio, orginal_sr = torchaudio.load(audio_fp)
+        audio = normalize_audio(audio, orginal_sr, sample_rate)
 
-    for input_file in tqdm(input_files, desc='Normalizing audio'):
-        output_file = output_dir / (input_file.stem + output_ext)
-        tfm.build(input_file, output_file)
-
-
-def main():
-    args = get_params()
-    normalize_audio(
-        args.input_dir, args.output_dir, args.input_ext, args.output_ext, args.sample_rate
-    )
+        torchaudio.save(output_fp, audio, sample_rate)
 
 
 if __name__ == '__main__':
-    main()
+    args = get_params()
+    main(**vars(args))
