@@ -14,7 +14,7 @@ class SummaryMixing(nn.Module):
         local_proj_out_dim: int,
         summary_hid_dim: int,
         summary_out_dim: int,
-        activation: str,
+        activation: Literal['relu', 'gelu'],
         mode: Literal['mixing', 'avgonly'],
     ):
         """https://arxiv.org/abs/2307.07421"""
