@@ -1,9 +1,8 @@
 from transformers import (
+    AutoProcessor,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
-    WhisperFeatureExtractor,
     WhisperForConditionalGeneration,
-    WhisperTokenizer,
 )
 
 from .collators import DataCollatorSpeechSeq2SeqWithPadding
@@ -11,10 +10,9 @@ from .collators import DataCollatorSpeechSeq2SeqWithPadding
 
 def get_whisper_trainer(hparams):
     model = WhisperForConditionalGeneration.from_pretrained(hparams.model_name)
-    tokenizer = WhisperTokenizer.from_pretrained(hparams.model_name)
-    feature_extractor = WhisperFeatureExtractor.from_pretrained(hparams.model_name)
+    processor = AutoProcessor.from_pretrained(hparams.processor_name)
     collator = DataCollatorSpeechSeq2SeqWithPadding(
-        processor=hparams.processor, decoder_start_token_id=tokenizer.pad_token_id
+        processor=processor, decoder_start_token_id=processor.tokenizer.pad_token_id
     )
 
     training_args = Seq2SeqTrainingArguments(
@@ -42,7 +40,7 @@ def get_whisper_trainer(hparams):
     return Seq2SeqTrainer(
         args=training_args,
         model=model,
-        tokenizer=tokenizer,
-        feature_extractor=feature_extractor,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
         data_collator=collator,
     )
