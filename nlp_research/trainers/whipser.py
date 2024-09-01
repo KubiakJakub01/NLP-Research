@@ -6,11 +6,16 @@ from transformers import (
     WhisperTokenizer,
 )
 
+from .collators import DataCollatorSpeechSeq2SeqWithPadding
+
 
 def get_whisper_trainer(hparams):
     model = WhisperForConditionalGeneration.from_pretrained(hparams.model_name)
     tokenizer = WhisperTokenizer.from_pretrained(hparams.model_name)
     feature_extractor = WhisperFeatureExtractor.from_pretrained(hparams.model_name)
+    collator = DataCollatorSpeechSeq2SeqWithPadding(
+        processor=hparams.processor, decoder_start_token_id=tokenizer.pad_token_id
+    )
 
     training_args = Seq2SeqTrainingArguments(
         output_dir='./whisper-small-hi',  # change to a repo name of your choice
@@ -35,5 +40,9 @@ def get_whisper_trainer(hparams):
         push_to_hub=True,
     )
     return Seq2SeqTrainer(
-        args=training_args, model=model, tokenizer=tokenizer, feature_extractor=feature_extractor
+        args=training_args,
+        model=model,
+        tokenizer=tokenizer,
+        feature_extractor=feature_extractor,
+        data_collator=collator,
     )
