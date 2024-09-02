@@ -16,26 +16,26 @@ def get_whisper_trainer(hparams):
     )
 
     training_args = Seq2SeqTrainingArguments(
-        output_dir='./whisper-small-hi',  # change to a repo name of your choice
-        per_device_train_batch_size=16,
-        gradient_accumulation_steps=1,  # increase by 2x for every 2x decrease in batch size
-        learning_rate=1e-5,
-        warmup_steps=500,
-        max_steps=5000,
-        gradient_checkpointing=True,
-        fp16=True,
-        evaluation_strategy='steps',
-        per_device_eval_batch_size=8,
-        predict_with_generate=True,
-        generation_max_length=225,
-        save_steps=1000,
-        eval_steps=1000,
-        logging_steps=25,
-        report_to=['tensorboard'],
         load_best_model_at_end=True,
         metric_for_best_model='wer',
         greater_is_better=False,
-        push_to_hub=True,
+        report_to=['tensorboard'],
+        output_dir=hparams.output_dir,
+        per_device_train_batch_size=hparams.batch_size,
+        gradient_accumulation_steps=hparams.gradient_accumulation_steps,
+        learning_rate=hparams.learning_rate,
+        warmup_steps=hparams.warmup_steps,
+        max_steps=hparams.max_steps,
+        gradient_checkpointing=hparams.gradient_checkpointing,
+        fp16=hparams.use_fp16,
+        evaluation_strategy=hparams.evaluation_strategy,
+        per_device_eval_batch_size=hparams.eval_batch_size,
+        predict_with_generate=hparams.predict_with_generate,
+        generation_max_length=hparams.max_target_length,
+        save_steps=hparams.save_steps,
+        eval_steps=hparams.save_steps,
+        logging_steps=hparams.logging_steps,
+        push_to_hub=hparams.push_to_hub,
     )
     return Seq2SeqTrainer(
         args=training_args,
