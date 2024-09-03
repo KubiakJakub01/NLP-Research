@@ -46,6 +46,7 @@ class WhisperTrainer:
             model=self.model,
             tokenizer=self.processor.tokenizer,
             feature_extractor=self.processor.feature_extractor,
+            compute_metrics=self.compute_metrics,
             data_collator=self.collator,
         )
 
