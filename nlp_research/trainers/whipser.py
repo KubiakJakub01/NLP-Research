@@ -12,7 +12,7 @@ from .collators import DataCollatorSpeechSeq2SeqWithPadding
 class WhisperTrainer:
     def __init__(self, hparams):
         self.hparams = hparams
-        self.model = WhisperForConditionalGeneration.from_pretrained(self.hparams.model_name)
+        self.model = self._init_model()
         self.processor = AutoProcessor.from_pretrained(self.hparams.processor_name)
         self.collator = DataCollatorSpeechSeq2SeqWithPadding(
             processor=self.processor, decoder_start_token_id=self.processor.tokenizer.pad_token_id
@@ -75,3 +75,10 @@ class WhisperTrainer:
         wer = 100 * self.metric.compute(predictions=pred_str, references=label_str)
 
         return {'wer': wer}
+
+    def _init_model(self):
+        model = WhisperForConditionalGeneration.from_pretrained(self.hparams.model_name)
+        model.generation_config.language = self.hparams.language
+        model.generation_config.task = self.hparams.task
+        model.generation_config.forced_decoder_ids = None
+        return model
