@@ -82,3 +82,16 @@ class WhisperTrainer:
         model.generation_config.task = self.hparams.task
         model.generation_config.forced_decoder_ids = None
         return model
+
+    def _prepare_dataset(self, batch):
+        # load and resample audio data from 48 to 16kHz
+        audio = batch['audio']
+
+        # compute log-Mel input features from input audio array
+        batch['input_features'] = self.feature_extractor(
+            audio['array'], sampling_rate=audio['sampling_rate']
+        ).input_features[0]
+
+        # encode target text to label ids
+        batch['labels'] = self.tokenizer(batch['sentence']).input_ids
+        return batch
