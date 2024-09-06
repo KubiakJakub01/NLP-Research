@@ -28,6 +28,7 @@ ffmpeg = "^1.4"
 whisperx = {git = "https://github.com/m-bain/whisperX.git"}
 nvidia-cublas-cu11 = "^11.11.3.6"
 nvidia-cudnn-cu11 = "^8.9.6.50"
+evaluate = "^0.4.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.5.1"
