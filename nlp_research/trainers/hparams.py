@@ -9,7 +9,8 @@ class WhisperHparams(BaseModel):
     processor_name: str = 'openai/whisper-base'
 
     # Data
-    dataset_name: str = 'common_voice'
+    dataset_name: str = 'mozilla-foundation/common_voice_13_0'
+    subset: str = 'pl'
     remove_columns: list[str] = [
         'accent',
         'age',
