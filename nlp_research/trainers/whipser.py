@@ -7,6 +7,7 @@ from transformers import (
 )
 
 from .collators import DataCollatorSpeechSeq2SeqWithPadding
+from .data import create_audio_dataset
 
 
 class WhisperTrainer:
@@ -18,6 +19,8 @@ class WhisperTrainer:
             processor=self.processor, decoder_start_token_id=self.processor.tokenizer.pad_token_id
         )
         self.metric = evaluate.load('wer')
+
+        self.dataset = create_audio_dataset(self.hparams)
 
         training_args = Seq2SeqTrainingArguments(
             load_best_model_at_end=True,
@@ -44,6 +47,8 @@ class WhisperTrainer:
         self._trainer = Seq2SeqTrainer(
             args=training_args,
             model=self.model,
+            train_dataset=self.dataset['train'],
+            eval_dataset=self.dataset['validation'],
             tokenizer=self.processor.tokenizer,
             feature_extractor=self.processor.feature_extractor,
             compute_metrics=self.compute_metrics,
