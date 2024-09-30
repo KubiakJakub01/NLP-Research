@@ -15,6 +15,10 @@ def parse_args():
     return parser.parse_args()
 
 
+def compute_cosine_similarity(embedding1, embedding2):
+    return torch.nn.functional.cosine_similarity(embedding1, embedding2, dim=0).item()
+
+
 def main(input_tsv: Path, ref_col: str, compare_col: str, verify_col: str):
     df = pd.read_csv(input_tsv, sep='\t')
 
@@ -27,6 +31,15 @@ def main(input_tsv: Path, ref_col: str, compare_col: str, verify_col: str):
     # Verify speaker
     df[verify_col] = df.apply(
         lambda x: speaker_verification_model.verify_speakers(x[ref_col], x[compare_col]), axis=1
+    )
+
+    # Compute cosine similarity
+    df['cosine_similarity'] = df.apply(
+        lambda x: compute_cosine_similarity(
+            speaker_verification_model.get_embedding(x[ref_col]),
+            speaker_verification_model.get_embedding(x[compare_col]),
+        ),
+        axis=1,
     )
 
     # Save result
