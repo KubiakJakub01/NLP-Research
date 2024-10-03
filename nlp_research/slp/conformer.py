@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchaudio.functional import rnnt_loss
 from torchaudio.prototype.models import conformer_rnnt_model
 
 
@@ -45,4 +46,6 @@ class ConformerRNNTModel(nn.Module):
         )
 
     def forward(self, x, x_len, y, y_len):
-        return self.model(x, x_len, y, y_len)
+        out, x_len, y_len = self.model(x, x_len, y, y_len)
+        loss = rnnt_loss(out, y, x_len, y_len)
+        return loss
