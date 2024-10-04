@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torch import Tensor
 from torchaudio.functional import rnnt_loss
 from torchaudio.prototype.models import conformer_rnnt_model
 
@@ -45,7 +46,9 @@ class ConformerRNNTModel(nn.Module):
             joiner_activation=joiner_activation,
         )
 
-    def forward(self, x, x_len, y, y_len):
-        out, x_len, y_len = self.model(x, x_len, y, y_len)
-        loss = rnnt_loss(out, y, x_len, y_len)
+    def forward(
+        self, audio: Tensor, audio_lens: Tensor, tokens: Tensor, tokens_lens: Tensor
+    ) -> Tensor:
+        out, audio_lens, tokens_lens = self.model(audio, audio_lens, tokens, tokens_lens)
+        loss = rnnt_loss(out, tokens, audio_lens, tokens_lens)
         return loss
