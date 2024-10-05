@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from torch import Tensor
 from torchaudio.functional import rnnt_loss
@@ -52,3 +53,7 @@ class ConformerRNNTModel(nn.Module):
         out, audio_lens, tokens_lens = self.model(audio, audio_lens, tokens, tokens_lens)
         loss = rnnt_loss(out, tokens, audio_lens, tokens_lens)
         return loss
+
+    @torch.inference_mode()
+    def transcribe(self, audio: Tensor, audio_lens: Tensor) -> Tensor:
+        return self.model.transcribe(audio, audio_lens)
