@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torchaudio.functional import rnnt_loss
+from torchaudio.models import RNNTBeamSearch
 from torchaudio.prototype.models import conformer_rnnt_model
 
 
@@ -46,6 +47,7 @@ class ConformerRNNTModel(nn.Module):
             lstm_dropout=lstm_dropout,
             joiner_activation=joiner_activation,
         )
+        self.decoder = RNNTBeamSearch(self.model, blank=0)
 
     def forward(
         self, audio: Tensor, audio_lens: Tensor, tokens: Tensor, tokens_lens: Tensor
@@ -57,3 +59,8 @@ class ConformerRNNTModel(nn.Module):
     @torch.inference_mode()
     def transcribe(self, audio: Tensor, audio_lens: Tensor) -> Tensor:
         return self.model.transcribe(audio, audio_lens)
+
+    @torch.inference_mode()
+    def decode(self, audio: Tensor, audio_lens: Tensor) -> Tensor:
+        # Use beam search to decode the audio
+        return self.decoder(audio, audio_lens)
