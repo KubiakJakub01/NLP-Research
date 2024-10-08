@@ -49,6 +49,10 @@ class ConformerRNNTModel(nn.Module):
         )
         self.decoder = RNNTBeamSearch(self.model, blank=0)
 
+    @property
+    def device(self) -> torch.device:
+        return next(self.parameters()).device
+
     def forward(
         self, audio: Tensor, audio_lens: Tensor, tokens: Tensor, tokens_lens: Tensor
     ) -> Tensor:
