@@ -67,4 +67,5 @@ class ConformerRNNTModel(nn.Module):
     @torch.inference_mode()
     def decode(self, audio: Tensor, audio_lens: Tensor) -> Tensor:
         # Use beam search to decode the audio
-        return self.decoder(audio, audio_lens)
+        hyps = self.decoder(audio, audio_lens)
+        return hyps[0].tokens
