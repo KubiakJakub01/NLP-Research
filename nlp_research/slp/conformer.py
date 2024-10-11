@@ -6,7 +6,7 @@ from torchaudio.models import RNNTBeamSearch
 from torchaudio.prototype.models import conformer_rnnt_model
 
 
-class ConformerRNNTModel(nn.Module):
+class ASRConformer(nn.Module):
     def __init__(
         self,
         input_dim: int,
@@ -38,7 +38,7 @@ class ConformerRNNTModel(nn.Module):
             conformer_num_heads=conformer_num_heads,
             conformer_depthwise_conv_kernel_size=conformer_depthwise_conv_kernel_size,
             conformer_dropout=conformer_dropout,
-            num_symbols=num_symbols,
+            num_symbols=num_symbols + 1,
             symbol_embedding_dim=symbol_embedding_dim,
             num_lstm_layers=num_lstm_layers,
             lstm_hidden_dim=lstm_hidden_dim,
@@ -47,17 +47,27 @@ class ConformerRNNTModel(nn.Module):
             lstm_dropout=lstm_dropout,
             joiner_activation=joiner_activation,
         )
-        self.decoder = RNNTBeamSearch(self.model, blank=0)
+        self.decoder = RNNTBeamSearch(self.model, blank=num_symbols)
 
     @property
     def device(self) -> torch.device:
         return next(self.parameters()).device
 
-    def forward(
-        self, audio: Tensor, audio_lens: Tensor, tokens: Tensor, tokens_lens: Tensor
-    ) -> Tensor:
-        out, audio_lens, tokens_lens = self.model(audio, audio_lens, tokens, tokens_lens)
-        loss = rnnt_loss(out, tokens, audio_lens, tokens_lens)
+    def forward(self, mel: Tensor, mel_len: Tensor, tokens: Tensor, tokens_len: Tensor) -> Tensor:
+        """Forward pass of the model
+
+        Args:
+            mel: Mel spectrogram of shape (B, T, C)
+            mel_len: Length of mel spectrogram of shape (B)
+            tokens: Tokens of shape (B, L)
+            tokens_len: Length of tokens of shape (B)
+
+        Returns:
+            loss: Loss value"""
+        assert mel.dim() == 3 and tokens.dim() == 2, 'Input shape must be (B, T, C) and (B, L)'
+
+        out, mel_len, tokens_len = self.model(mel, mel_len, tokens, tokens_len)
+        loss = rnnt_loss(out, tokens, mel_len, tokens_len)
         return loss
 
     @torch.inference_mode()
