@@ -1,3 +1,4 @@
+import sentencepiece as spm
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -95,3 +96,38 @@ class ASRConformer(nn.Module):
         mel_len = torch.tensor([mel.size(1)], device=self.device)
         out = self.decoder(mel, mel_len, self.beam_size)
         return out
+
+    @torch.inference_mode()
+    def transcribe(self, mel: Tensor, tokenizer: spm.SentencePieceProcessor) -> str:
+        """Transcribe the mel spectrogram
+
+        Args:
+            mel: Mel spectrogram of shape (1, T, C)
+            sp: SentencePieceProcessor
+
+        Returns:
+            List of transcriptions"""
+        assert mel.dim() == 3 and mel.size(0) == 1, 'Input shape must be (1, T, C)'
+        hyp = self.inference(mel)
+        return self.post_process_hypotesis(hyp, tokenizer)[0]
+
+    @staticmethod
+    def post_process_hypotesis(
+        hyp: list[Hypothesis], tokenizer: spm.SentencePieceProcessor
+    ) -> list[str]:
+        """Post-process the hypothesis"""
+        tokens_idx = 0
+        post_process_remove_list = [
+            tokenizer.unk_id(),
+            tokenizer.pad_id(),
+            tokenizer.eos_id(),
+        ]
+        filtered_hypo_tokens = [
+            [
+                token_index
+                for token_index in h[tokens_idx][1:]
+                if token_index not in post_process_remove_list
+            ]
+            for h in hyp
+        ]
+        return [tokenizer.Decode(tokens) for tokens in filtered_hypo_tokens]
