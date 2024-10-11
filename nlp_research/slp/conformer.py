@@ -28,6 +28,8 @@ class ASRConformer(nn.Module):
         joiner_activation: str,
     ):
         super().__init__()
+        self.blank = num_symbols
+
         self.model = conformer_rnnt_model(
             input_dim=input_dim,
             encoding_dim=encoding_dim,
@@ -47,7 +49,7 @@ class ASRConformer(nn.Module):
             lstm_dropout=lstm_dropout,
             joiner_activation=joiner_activation,
         )
-        self.decoder = RNNTBeamSearch(self.model, blank=num_symbols)
+        self.decoder = RNNTBeamSearch(self.model, blank=self.blank)
 
     @property
     def device(self) -> torch.device:
@@ -66,8 +68,15 @@ class ASRConformer(nn.Module):
             loss: Loss value"""
         assert mel.dim() == 3 and tokens.dim() == 2, 'Input shape must be (B, T, C) and (B, L)'
 
-        out, mel_len, tokens_len = self.model(mel, mel_len, tokens, tokens_len)
-        loss = rnnt_loss(out, tokens, mel_len, tokens_len)
+        prepended_targets = tokens.new_zeros(tokens.size(0), tokens.size(1) + 1)
+        prepended_targets[:, 1:] = tokens
+        prepended_targets[:, 0] = self.blank
+        prepended_targets_len = tokens_len + 1
+
+        out, src_len, _, _ = self.model(mel, mel_len, prepended_targets, prepended_targets_len)
+        loss = rnnt_loss(out, tokens, src_len, tokens_len)
+        loss = (loss / mel_len.float()).mean()
+
         return loss
 
     @torch.inference_mode()
