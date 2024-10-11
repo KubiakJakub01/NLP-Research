@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torchaudio.functional import rnnt_loss
-from torchaudio.models import RNNTBeamSearch
+from torchaudio.models import Hypothesis, RNNTBeamSearch
 from torchaudio.prototype.models import conformer_rnnt_model
 
 
@@ -26,9 +26,11 @@ class ASRConformer(nn.Module):
         lstm_layer_norm_epsilon: int,
         lstm_dropout: int,
         joiner_activation: str,
+        beam_size: int,
     ):
         super().__init__()
         self.blank = num_symbols
+        self.beam_size = beam_size
 
         self.model = conformer_rnnt_model(
             input_dim=input_dim,
@@ -80,11 +82,16 @@ class ASRConformer(nn.Module):
         return loss
 
     @torch.inference_mode()
-    def transcribe(self, audio: Tensor, audio_lens: Tensor) -> Tensor:
-        return self.model.transcribe(audio, audio_lens)
+    def inference(self, mel: Tensor) -> list[Hypothesis]:
+        """Inference of the model
 
-    @torch.inference_mode()
-    def decode(self, audio: Tensor, audio_lens: Tensor) -> Tensor:
-        # Use beam search to decode the audio
-        hyps = self.decoder(audio, audio_lens)
-        return hyps[0].tokens
+        Args:
+            mel: Mel spectrogram of shape (B, T, C)
+
+        Returns:
+            List of hypothesis"""
+        assert mel.dim() == 3, 'Input shape must be (B, T, C)'
+
+        mel_len = torch.tensor([mel.size(1)], device=self.device)
+        out = self.decoder(mel, mel_len, self.beam_size)
+        return out
