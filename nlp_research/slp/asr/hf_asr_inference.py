@@ -6,8 +6,8 @@ import torch
 from tqdm import tqdm
 from transformers import AutoModelForSpeechSeq2Seq, AutoTokenizer, SeamlessM4Tv2Model, pipeline
 
-from ..utils import log_info
-from .data import AudioDataset
+from ...utils import log_info
+from ..data import AudioDataset
 
 AVALIABLE_MODELS = [
     'openai/whisper-large-v3',
