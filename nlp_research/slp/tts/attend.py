@@ -132,8 +132,7 @@ class RelativePositionMultiHeadAttention(nn.Module):
         value: torch.Tensor,
         mask: torch.Tensor | None = None,
     ):
-        b, d, t_s = key.size()
-        t_t = query.size(2)
+        t_s, t_t = key.size(2), query.size(2)
         query = rearrange(
             query, 'b (n_h d_k) t -> b n_h t d_k', n_h=self.num_heads, d_k=self.k_channels
         )
@@ -144,7 +143,9 @@ class RelativePositionMultiHeadAttention(nn.Module):
             value, 'b (n_h d_k) t -> b n_h t d_k', n_h=self.num_heads, d_k=self.k_channels
         )
         # compute raw attention scores
-        scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(self.k_channels)
+        scores = torch.matmul(
+            query, rearrange(key, 'b n_h t d_k -> b n_h d_k t') / math.sqrt(self.k_channels)
+        )
         # relative positional encoding for scores
         if self.rel_attn_window_size is not None:
             assert t_s == t_t, 'Relative attention is only available for self-attention.'
@@ -182,9 +183,7 @@ class RelativePositionMultiHeadAttention(nn.Module):
             output = output + self._matmul_with_relative_values(
                 relative_weights, value_relative_embeddings
             )
-        output = (
-            output.transpose(2, 3).contiguous().view(b, d, t_t)
-        )  # [b, n_h, t_t, d_k] -> [b, d, t_t]
+        output = rearrange(output, 'b n_h t d_k -> b (n_h d_k) t')
         return output, p_attn
 
     @staticmethod
