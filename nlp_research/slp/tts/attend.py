@@ -187,34 +187,33 @@ class RelativePositionMultiHeadAttention(nn.Module):
         return output, p_attn
 
     @staticmethod
-    def _matmul_with_relative_values(p_attn, re):
+    def _matmul_with_relative_values(p_attn: torch.Tensor, re: torch.Tensor):
         """
         Args:
-            p_attn (Tensor): attention weights.
-            re (Tensor): relative value embedding vector. (a_(i,j)^V)
+            p_attn: attention weights.
+            re: relative value embedding vector. (a_(i,j)^V)
 
         Shapes:
             -p_attn: :math:`[B, H, T, V]`
             -re: :math:`[H or 1, V, D]`
             -logits: :math:`[B, H, T, D]`
         """
-        logits = torch.matmul(p_attn, re.unsqueeze(0))
+        logits = torch.matmul(p_attn, rearrange(re, '1 t c -> 1 1 t c'))
         return logits
 
     @staticmethod
-    def _matmul_with_relative_keys(query, re):
+    def _matmul_with_relative_keys(query: torch.Tensor, re: torch.Tensor):
         """
         Args:
-            query (Tensor): batch of query vectors. (x*W^Q)
-            re (Tensor): relative key embedding vector. (a_(i,j)^K)
+            query: batch of query vectors. (x*W^Q)
+            re: relative key embedding vector. (a_(i,j)^K)
 
         Shapes:
             - query: :math:`[B, H, T, D]`
             - re: :math:`[H or 1, V, D]`
             - logits: :math:`[B, H, T, V]`
         """
-        # logits = torch.einsum('bhld, kmd -> bhlm', [query, re.to(query.dtype)])
-        logits = torch.matmul(query, re.unsqueeze(0).transpose(-2, -1))
+        logits = torch.matmul(query, rearrange(re, '1 t c -> 1 1 c t'))
         return logits
 
     def _get_relative_embeddings(self, relative_embeddings, length):
