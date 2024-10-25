@@ -270,19 +270,19 @@ class RelativePositionMultiHeadAttention(nn.Module):
         return x_final
 
     @staticmethod
-    def _attn_proximity_bias(length):
+    def _attn_proximity_bias(length: int) -> torch.Tensor:
         """Produce an attention mask that discourages distant
         attention values.
         Args:
-            length (int): an integer scalar.
+            length: an integer scalar.
         Returns:
             a Tensor with shape :math:`[1, 1, T, T]`
         """
         # L
         r = torch.arange(length, dtype=torch.float32)
         # L x L
-        diff = torch.unsqueeze(r, 0) - torch.unsqueeze(r, 1)
+        diff = rearrange(r, 'l -> 1 l') - rearrange(r, 'l -> l 1')
         # scale mask values
         diff = -torch.log1p(torch.abs(diff))
         # 1 x 1 x L x L
-        return diff.unsqueeze(0).unsqueeze(0)
+        return rearrange(diff, 'l1 l2 -> 1 1 l1 l2')
