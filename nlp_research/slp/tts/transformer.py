@@ -10,6 +10,84 @@ from .modules import LayerNorm, LayerNorm2
 from .utils import sequence_mask
 
 
+class TextEncoder(nn.Module):
+    def __init__(
+        self,
+        n_vocab: int,
+        out_channels: int,
+        hidden_channels: int,
+        hidden_channels_ffn: int,
+        num_heads: int,
+        num_layers: int,
+        kernel_size: int,
+        dropout_p: float,
+        language_emb_dim: int | None = None,
+    ):
+        """Text Encoder for VITS model.
+
+        Args:
+            n_vocab: Number of characters for the embedding layer.
+            out_channels: Number of channels for the output.
+            hidden_channels: Number of channels for the hidden layers.
+            hidden_channels_ffn: Number of channels for the convolutional layers.
+            num_heads: Number of attention heads for the Transformer layers.
+            num_layers: Number of Transformer layers.
+            kernel_size: Kernel size for the FFN layers in Transformer network.
+            dropout_p: Dropout rate for the Transformer layers.
+        """
+        super().__init__()
+        self.out_channels = out_channels
+        self.hidden_channels = hidden_channels
+
+        self.emb = nn.Embedding(n_vocab, hidden_channels)
+
+        nn.init.normal_(self.emb.weight, 0.0, hidden_channels**-0.5)
+
+        if language_emb_dim:
+            hidden_channels += language_emb_dim
+
+        self.encoder = RelativePositionTransformer(
+            in_channels=hidden_channels,
+            out_channels=hidden_channels,
+            hidden_channels=hidden_channels,
+            hidden_channels_ffn=hidden_channels_ffn,
+            num_heads=num_heads,
+            num_layers=num_layers,
+            kernel_size=kernel_size,
+            dropout_p=dropout_p,
+            layer_norm_type='2',
+            rel_attn_window_size=4,
+        )
+
+        self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
+
+    def forward(
+        self, x: torch.Tensor, x_lengths: torch.Tensor, lang_emb: torch.Tensor | None = None
+    ):
+        """
+        Shapes:
+            - x: :math:`[B, T]`
+            - x_length: :math:`[B]`
+            - lang_emb: :math:`[L, H, 1]`
+        """
+        assert x.shape[0] == x_lengths.shape[0]
+        B, T = x.shape
+        x = self.emb(x) * math.sqrt(self.hidden_channels)  # [b, t, h]
+
+        # concat the lang emb in embedding chars
+        if lang_emb is not None:
+            x = torch.cat(x, rearrange(lang_emb, '(b l) (t h) 1 -> b t (l h)', b=B, T=T), dim=-1)
+
+        x = rearrange(x, 'b t h -> b h t')
+        x_mask = rearrange(sequence_mask(x_lengths, T), 'b t -> b 1 t').to(x.dtype)  # [b, 1, t]
+
+        x = self.encoder(x * x_mask, x_mask)
+        stats = self.proj(x) * x_mask
+
+        m, logs = torch.split(stats, self.out_channels, dim=1)
+        return x, m, logs, x_mask
+
+
 class RelativePositionTransformer(nn.Module):
     """Transformer with Relative Potional Encoding.
     https://arxiv.org/abs/1803.02155
@@ -126,84 +204,6 @@ class RelativePositionTransformer(nn.Module):
             x = self.norm_layers_2[i](x + y)
         x = x * x_mask
         return x
-
-
-class TextEncoder(nn.Module):
-    def __init__(
-        self,
-        n_vocab: int,
-        out_channels: int,
-        hidden_channels: int,
-        hidden_channels_ffn: int,
-        num_heads: int,
-        num_layers: int,
-        kernel_size: int,
-        dropout_p: float,
-        language_emb_dim: int | None = None,
-    ):
-        """Text Encoder for VITS model.
-
-        Args:
-            n_vocab: Number of characters for the embedding layer.
-            out_channels: Number of channels for the output.
-            hidden_channels: Number of channels for the hidden layers.
-            hidden_channels_ffn: Number of channels for the convolutional layers.
-            num_heads: Number of attention heads for the Transformer layers.
-            num_layers: Number of Transformer layers.
-            kernel_size: Kernel size for the FFN layers in Transformer network.
-            dropout_p: Dropout rate for the Transformer layers.
-        """
-        super().__init__()
-        self.out_channels = out_channels
-        self.hidden_channels = hidden_channels
-
-        self.emb = nn.Embedding(n_vocab, hidden_channels)
-
-        nn.init.normal_(self.emb.weight, 0.0, hidden_channels**-0.5)
-
-        if language_emb_dim:
-            hidden_channels += language_emb_dim
-
-        self.encoder = RelativePositionTransformer(
-            in_channels=hidden_channels,
-            out_channels=hidden_channels,
-            hidden_channels=hidden_channels,
-            hidden_channels_ffn=hidden_channels_ffn,
-            num_heads=num_heads,
-            num_layers=num_layers,
-            kernel_size=kernel_size,
-            dropout_p=dropout_p,
-            layer_norm_type='2',
-            rel_attn_window_size=4,
-        )
-
-        self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
-
-    def forward(
-        self, x: torch.Tensor, x_lengths: torch.Tensor, lang_emb: torch.Tensor | None = None
-    ):
-        """
-        Shapes:
-            - x: :math:`[B, T]`
-            - x_length: :math:`[B]`
-            - lang_emb: :math:`[L, H, 1]`
-        """
-        assert x.shape[0] == x_lengths.shape[0]
-        B, T = x.shape
-        x = self.emb(x) * math.sqrt(self.hidden_channels)  # [b, t, h]
-
-        # concat the lang emb in embedding chars
-        if lang_emb is not None:
-            x = torch.cat(x, rearrange(lang_emb, '(b l) (t h) 1 -> b t (l h)', b=B, T=T), dim=-1)
-
-        x = rearrange(x, 'b t h -> b h t')
-        x_mask = rearrange(sequence_mask(x_lengths, T), 'b t -> b 1 t').to(x.dtype)  # [b, 1, t]
-
-        x = self.encoder(x * x_mask, x_mask)
-        stats = self.proj(x) * x_mask
-
-        m, logs = torch.split(stats, self.out_channels, dim=1)
-        return x, m, logs, x_mask
 
 
 class FeedForwardNetwork(nn.Module):
