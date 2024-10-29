@@ -41,7 +41,7 @@ class RelativePositionTransformer(nn.Module):
         hidden_channels_ffn: int,
         num_heads: int,
         num_layers: int,
-        kernel_size: int | None = 1,
+        kernel_size: int = 1,
         dropout_p: float = 0.0,
         rel_attn_window_size: int | None = None,
         input_length: int | None = None,
@@ -144,14 +144,14 @@ class TextEncoder(nn.Module):
         """Text Encoder for VITS model.
 
         Args:
-            n_vocab (int): Number of characters for the embedding layer.
-            out_channels (int): Number of channels for the output.
-            hidden_channels (int): Number of channels for the hidden layers.
-            hidden_channels_ffn (int): Number of channels for the convolutional layers.
-            num_heads (int): Number of attention heads for the Transformer layers.
-            num_layers (int): Number of Transformer layers.
-            kernel_size (int): Kernel size for the FFN layers in Transformer network.
-            dropout_p (float): Dropout rate for the Transformer layers.
+            n_vocab: Number of characters for the embedding layer.
+            out_channels: Number of channels for the output.
+            hidden_channels: Number of channels for the hidden layers.
+            hidden_channels_ffn: Number of channels for the convolutional layers.
+            num_heads: Number of attention heads for the Transformer layers.
+            num_layers: Number of Transformer layers.
+            kernel_size: Kernel size for the FFN layers in Transformer network.
+            dropout_p: Dropout rate for the Transformer layers.
         """
         super().__init__()
         self.out_channels = out_channels
@@ -207,19 +207,24 @@ class TextEncoder(nn.Module):
 
 
 class FeedForwardNetwork(nn.Module):
-    """Feed Forward Inner layers for Transformer.
-
-    Args:
-        in_channels (int): input tensor channels.
-        out_channels (int): output tensor channels.
-        hidden_channels (int): inner layers hidden channels.
-        kernel_size (int): conv1d filter kernel size.
-        dropout_p (float, optional): dropout rate. Defaults to 0.
-    """
-
     def __init__(
-        self, in_channels, out_channels, hidden_channels, kernel_size, dropout_p=0.0, causal=False
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: int,
+        kernel_size: int,
+        dropout_p: float = 0.0,
+        causal: bool = False,
     ):
+        """Feed Forward Inner layers for Transformer.
+
+        Args:
+            in_channels: input tensor channels.
+            out_channels: output tensor channels.
+            hidden_channels: inner layers hidden channels.
+            kernel_size: conv1d filter kernel size.
+            dropout_p: dropout rate. Defaults to 0.
+        """
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -236,7 +241,7 @@ class FeedForwardNetwork(nn.Module):
         self.conv_2 = nn.Conv1d(hidden_channels, out_channels, kernel_size)
         self.dropout = nn.Dropout(dropout_p)
 
-    def forward(self, x, x_mask):
+    def forward(self, x: torch.Tensor, x_mask: torch.Tensor):
         x = self.conv_1(self.padding(x * x_mask))
         x = torch.relu(x)
         x = self.dropout(x)
