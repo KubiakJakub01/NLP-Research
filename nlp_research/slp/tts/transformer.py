@@ -182,13 +182,13 @@ class RelativePositionTransformer(nn.Module):
             else:
                 raise ValueError(' [!] Unknown layer norm type')
 
-    def forward(self, x, x_mask):
+    def forward(self, x: torch.Tensor, x_mask: torch.Tensor):
         """
         Shapes:
             - x: :math:`[B, C, T]`
             - x_mask: :math:`[B, 1, T]`
         """
-        attn_mask = x_mask.unsqueeze(2) * x_mask.unsqueeze(-1)
+        attn_mask = rearrange(x_mask, 'b 1 t -> b 1 1 t') * rearrange(x_mask, 'b 1 t -> b 1 t 1')
         for i in range(self.num_layers):
             x = x * x_mask
             y = self.attn_layers[i](x, x, attn_mask)
