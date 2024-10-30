@@ -76,7 +76,7 @@ class TextEncoder(nn.Module):
 
         # concat the lang emb in embedding chars
         if lang_emb is not None:
-            x = torch.cat(x, rearrange(lang_emb, '(b l) (t h) 1 -> b t (l h)', b=B, T=T), dim=-1)
+            x = torch.cat([x, rearrange(lang_emb, '(b l) (t h) 1 -> b t (l h)', b=B, T=T)], dim=-1)
 
         x = rearrange(x, 'b t h -> b h t')
         x_mask = rearrange(sequence_mask(x_lengths, T), 'b t -> b 1 t').to(x.dtype)  # [b, 1, t]

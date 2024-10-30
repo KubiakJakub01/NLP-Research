@@ -108,7 +108,7 @@ class RelativePositionMultiHeadAttention(nn.Module):
         # proximal bias
         if proximal_init:
             self.conv_k.weight.data.copy_(self.conv_q.weight.data)
-            self.conv_k.bias.data.copy_(self.conv_q.bias.data)
+            self.conv_k.bias.data.copy_(self.conv_q.bias.data)  # type: ignore
         nn.init.xavier_uniform_(self.conv_v.weight)
 
     def forward(self, x: torch.Tensor, c: torch.Tensor, attn_mask: torch.Tensor | None = None):

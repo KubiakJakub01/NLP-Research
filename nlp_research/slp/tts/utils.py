@@ -8,13 +8,13 @@ def sequence_mask(sequence_length: torch.Tensor, max_len: int | None = None):
 
     Args:
         sequence_length: Sequence lengths.
-        max_len (int, Optional): Maximum sequence length. Defaults to None.
+        max_len: Maximum sequence length. Defaults to None.
 
     Shapes:
         - mask: :math:`[B, T_max]`
     """
     if max_len is None:
-        max_len = sequence_length.max()
+        max_len = int(sequence_length.max().item())
     seq_range = torch.arange(max_len, dtype=sequence_length.dtype, device=sequence_length.device)
     # B x T_max
     return rearrange(seq_range, 't -> 1 t') < rearrange(sequence_length, 'b -> b 1')
