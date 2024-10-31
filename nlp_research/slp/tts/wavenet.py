@@ -36,7 +36,7 @@ class WaveNet(nn.Module):
         dilation_rate: int,
         num_layers: int,
         c_in_channels: int = 0,
-        dropout_p: int = 0,
+        dropout_p: float = 0.0,
         weight_norm: bool = True,
     ):
         super().__init__()
@@ -62,22 +62,13 @@ class WaveNet(nn.Module):
         for i in range(num_layers):
             dilation = dilation_rate**i
             padding = int((kernel_size * dilation - dilation) / 2)
-            if i == 0:
-                in_layer = nn.Conv1d(
-                    in_channels,
-                    2 * hidden_channels,
-                    kernel_size,
-                    dilation=dilation,
-                    padding=padding,
-                )
-            else:
-                in_layer = nn.Conv1d(
-                    hidden_channels,
-                    2 * hidden_channels,
-                    kernel_size,
-                    dilation=dilation,
-                    padding=padding,
-                )
+            in_layer = nn.Conv1d(
+                in_channels if i == 0 else hidden_channels,
+                2 * hidden_channels,
+                kernel_size,
+                dilation=dilation,
+                padding=padding,
+            )
             in_layer = nn.utils.parametrizations.weight_norm(in_layer, name='weight')
             self.in_layers.append(in_layer)
 
@@ -135,46 +126,50 @@ class WaveNetBlocks(nn.Module):
         along the dilation rate.
 
     Args:
-        in_channels (int): number of input channels.
-        hidden_channes (int): number of hidden channels.
-        kernel_size (int): filter kernel size for the first conv layer.
-        dilation_rate (int): dilations rate to increase dilation per layer.
+        in_channels: number of input channels.
+        hidden_channes: number of hidden channels.
+        kernel_size: filter kernel size for the first conv layer.
+        dilation_rate: dilations rate to increase dilation per layer.
             If it is 2, dilations are 1, 2, 4, 8 for the next 4 layers.
-        num_blocks (int): number of wavenet blocks.
-        num_layers (int): number of wavenet layers.
-        c_in_channels (int): number of channels of conditioning input.
-        dropout_p (float): dropout rate.
-        weight_norm (bool): enable/disable weight norm for convolution layers.
+        num_blocks: number of wavenet blocks.
+        num_layers: number of wavenet layers.
+        c_in_channels: number of channels of conditioning input.
+        dropout_p: dropout rate.
+        weight_norm: enable/disable weight norm for convolution layers.
     """
 
     def __init__(
         self,
-        in_channels,
-        hidden_channels,
-        kernel_size,
-        dilation_rate,
-        num_blocks,
-        num_layers,
-        c_in_channels=0,
-        dropout_p=0,
-        weight_norm=True,
+        in_channels: int,
+        hidden_channels: int,
+        kernel_size: int,
+        dilation_rate: int,
+        num_blocks: int,
+        num_layers: int,
+        c_in_channels: int = 0,
+        dropout_p: float = 0.0,
+        weight_norm: bool = True,
     ):
         super().__init__()
-        self.wn_blocks = nn.ModuleList()
-        for idx in range(num_blocks):
-            layer = WaveNet(
-                in_channels=in_channels if idx == 0 else hidden_channels,
-                hidden_channels=hidden_channels,
-                kernel_size=kernel_size,
-                dilation_rate=dilation_rate,
-                num_layers=num_layers,
-                c_in_channels=c_in_channels,
-                dropout_p=dropout_p,
-                weight_norm=weight_norm,
-            )
-            self.wn_blocks.append(layer)
+        self.wn_blocks = nn.ModuleList(
+            [
+                WaveNet(
+                    in_channels=in_channels if idx == 0 else hidden_channels,
+                    hidden_channels=hidden_channels,
+                    kernel_size=kernel_size,
+                    dilation_rate=dilation_rate,
+                    num_layers=num_layers,
+                    c_in_channels=c_in_channels,
+                    dropout_p=dropout_p,
+                    weight_norm=weight_norm,
+                )
+                for idx in range(num_blocks)
+            ]
+        )
 
-    def forward(self, x, x_mask=None, g=None):
+    def forward(
+        self, x: torch.Tensor, x_mask: torch.Tensor | None = None, g: torch.Tensor | None = None
+    ):
         o = x
         for layer in self.wn_blocks:
             o = layer(o, x_mask, g)
