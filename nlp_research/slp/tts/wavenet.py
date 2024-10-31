@@ -13,7 +13,7 @@ def fused_add_tanh_sigmoid_multiply(input_a, input_b, n_channels):
     return acts
 
 
-class WN(torch.nn.Module):
+class WaveNet(torch.nn.Module):
     """Wavenet layers with weight norm and no input conditioning.
 
     Args:
@@ -124,7 +124,7 @@ class WN(torch.nn.Module):
             parametrize.remove_parametrizations(res_skip_layer, 'weight')
 
 
-class WNBlocks(nn.Module):
+class WaveNetBlocks(nn.Module):
     """Wavenet blocks.
 
     Note: After each block dilation resets to 1 and it increases in each block
@@ -158,7 +158,7 @@ class WNBlocks(nn.Module):
         super().__init__()
         self.wn_blocks = nn.ModuleList()
         for idx in range(num_blocks):
-            layer = WN(
+            layer = WaveNet(
                 in_channels=in_channels if idx == 0 else hidden_channels,
                 hidden_channels=hidden_channels,
                 kernel_size=kernel_size,
