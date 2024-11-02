@@ -1,7 +1,7 @@
 from torch import nn
 
 from .hparams import VITSHparams
-from .transformer import TextEncoder
+from .transformer import PosteriorEncoder, TextEncoder
 
 
 class VITS(nn.Module):
@@ -15,15 +15,25 @@ class VITS(nn.Module):
         self.hparams = hparams
 
         self.text_encoder = TextEncoder(
-            n_vocab=hparams.num_chars,
-            out_channels=hparams.hidden_channels,
-            hidden_channels=hparams.hidden_channels,
-            hidden_channels_ffn=hparams.hidden_channels_ffn_text_encoder,
-            num_heads=hparams.num_heads_text_encoder,
-            num_layers=hparams.num_layers_text_encoder,
-            kernel_size=hparams.kernel_size_text_encoder,
-            dropout_p=hparams.dropout_p_text_encoder,
-            language_emb_dim=hparams.embedded_language_dim,
+            n_vocab=self.hparams.num_chars,
+            out_channels=self.hparams.hidden_channels,
+            hidden_channels=self.hparams.hidden_channels,
+            hidden_channels_ffn=self.hparams.hidden_channels_ffn_text_encoder,
+            num_heads=self.hparams.num_heads_text_encoder,
+            num_layers=self.hparams.num_layers_text_encoder,
+            kernel_size=self.hparams.kernel_size_text_encoder,
+            dropout_p=self.hparams.dropout_p_text_encoder,
+            language_emb_dim=self.hparams.embedded_language_dim,
+        )
+
+        self.posterior_encoder = PosteriorEncoder(
+            in_channels=self.hparams.out_channels,
+            out_channels=self.hparams.hidden_channels,
+            hidden_channels=self.hparams.hidden_channels,
+            kernel_size=self.hparams.kernel_size_posterior_encoder,
+            dilation_rate=self.hparams.dilation_rate_posterior_encoder,
+            num_layers=self.hparams.num_layers_posterior_encoder,
+            cond_channels=self.hparams.embedded_language_dim,
         )
 
     def forward(self, x):
