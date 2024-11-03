@@ -1,7 +1,8 @@
 from torch import nn
 
 from .hparams import VITSHparams
-from .transformer import PosteriorEncoder, TextEncoder
+from .networks import PosteriorEncoder
+from .transformer import TextEncoder
 
 
 class VITS(nn.Module):
