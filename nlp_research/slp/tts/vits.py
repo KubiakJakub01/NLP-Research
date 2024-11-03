@@ -1,7 +1,7 @@
 from torch import nn
 
 from .hparams import VITSHparams
-from .networks import PosteriorEncoder
+from .networks import PosteriorEncoder, ResidualCouplingBlocks
 from .transformer import TextEncoder
 
 
@@ -34,6 +34,15 @@ class VITS(nn.Module):
             kernel_size=self.hparams.kernel_size_posterior_encoder,
             dilation_rate=self.hparams.dilation_rate_posterior_encoder,
             num_layers=self.hparams.num_layers_posterior_encoder,
+            cond_channels=self.hparams.embedded_language_dim,
+        )
+
+        self.flow = ResidualCouplingBlocks(
+            channels=self.hparams.hidden_channels,
+            hidden_channels=self.hparams.hidden_channels,
+            kernel_size=self.hparams.kernel_size_flow,
+            dilation_rate=self.hparams.dilation_rate_flow,
+            num_layers=self.hparams.num_layers_flow,
             cond_channels=self.hparams.embedded_language_dim,
         )
 
