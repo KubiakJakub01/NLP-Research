@@ -133,3 +133,69 @@ class ResidualCouplingBlock(nn.Module):
         x = torch.cat([x0, x1], 1)
         logdet = torch.sum(log_scale, [1, 2])
         return x, logdet
+
+
+class ResidualCouplingBlocks(nn.Module):
+    def __init__(
+        self,
+        channels: int,
+        hidden_channels: int,
+        kernel_size: int,
+        dilation_rate: int,
+        num_layers: int,
+        num_flows: int = 4,
+        cond_channels: int = 0,
+    ):
+        """Redisual Coupling blocks for VITS flow layers.
+
+        Args:
+            channels: Number of input and output tensor channels.
+            hidden_channels: Number of hidden network channels.
+            kernel_size: Kernel size of the WaveNet layers.
+            dilation_rate: Dilation rate of the WaveNet layers.
+            num_layers: Number of the WaveNet layers.
+            num_flows: Number of Residual Coupling blocks. Defaults to 4.
+            cond_channels: Number of channels of the conditioning tensor. Defaults to 0.
+        """
+        super().__init__()
+        self.channels = channels
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        self.dilation_rate = dilation_rate
+        self.num_layers = num_layers
+        self.num_flows = num_flows
+        self.cond_channels = cond_channels
+
+        self.flows = nn.ModuleList()
+        for _ in range(num_flows):
+            self.flows.append(
+                ResidualCouplingBlock(
+                    channels,
+                    hidden_channels,
+                    kernel_size,
+                    dilation_rate,
+                    num_layers,
+                    cond_channels=cond_channels,
+                    mean_only=True,
+                )
+            )
+
+    def forward(self, x, x_mask, g=None, reverse=False):
+        """
+        Note:
+            Set `reverse` to True for inference.
+
+        Shapes:
+            - x: :math:`[B, C, T]`
+            - x_mask: :math:`[B, 1, T]`
+            - g: :math:`[B, C, 1]`
+        """
+        if not reverse:
+            for flow in self.flows:
+                x, _ = flow(x, x_mask, g=g, reverse=reverse)
+                x = torch.flip(x, [1])
+        else:
+            for flow in reversed(self.flows):
+                x = torch.flip(x, [1])
+                x = flow(x, x_mask, g=g, reverse=reverse)
+        return x
