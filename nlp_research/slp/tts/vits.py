@@ -1,7 +1,7 @@
 from torch import nn
 
 from .hparams import VITSHparams
-from .networks import PosteriorEncoder, ResidualCouplingBlocks
+from .networks import DurationPredictor, PosteriorEncoder, ResidualCouplingBlocks
 from .transformer import TextEncoder
 
 
@@ -44,6 +44,15 @@ class VITS(nn.Module):
             dilation_rate=self.hparams.dilation_rate_flow,
             num_layers=self.hparams.num_layers_flow,
             cond_channels=self.hparams.embedded_language_dim,
+        )
+
+        self.duration_predictor = DurationPredictor(
+            self.hparams.hidden_channels,
+            256,
+            3,
+            self.hparams.dropout_p_duration_predictor,
+            cond_channels=self.hparams.embedded_language_dim,
+            language_emb_dim=self.hparams.embedded_language_dim,
         )
 
     def forward(self, x):
