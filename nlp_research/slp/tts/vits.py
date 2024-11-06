@@ -1,5 +1,6 @@
 from torch import nn
 
+from .hifigan import HifiganGenerator
 from .hparams import VITSHparams
 from .networks import DurationPredictor, PosteriorEncoder, ResidualCouplingBlocks
 from .transformer import TextEncoder
@@ -53,6 +54,22 @@ class VITS(nn.Module):
             self.hparams.dropout_p_duration_predictor,
             cond_channels=self.hparams.embedded_language_dim,
             language_emb_dim=self.hparams.embedded_language_dim,
+        )
+
+        self.vocoder = HifiganGenerator(
+            self.hparams.hidden_channels,
+            1,
+            self.hparams.resblock_type_decoder,
+            self.hparams.resblock_dilation_sizes_decoder,
+            self.hparams.resblock_kernel_sizes_decoder,
+            self.hparams.upsample_kernel_sizes_decoder,
+            self.hparams.upsample_initial_channel_decoder,
+            self.hparams.upsample_rates_decoder,
+            inference_padding=0,
+            cond_channels=self.hparams.embedded_language_dim,
+            conv_pre_weight_norm=False,
+            conv_post_weight_norm=False,
+            conv_post_bias=False,
         )
 
     def forward(self, x):
