@@ -75,14 +75,14 @@ class DiscriminatorP(torch.nn.Module):
         )
         self.conv_post = norm_f(nn.Conv2d(1024, 1, (3, 1), 1, padding=(1, 0)))
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         """
         Args:
-            x (Tensor): input waveform.
+            x: input waveform.
 
         Returns:
-            [Tensor]: discriminator scores per sample in the batch.
-            [List[Tensor]]: list of features from each convolutional layer.
+            x: discriminator scores per sample in the batch.
+            feat: list of features from each convolutional layer.
 
         Shapes:
             x: [B, 1, T]
@@ -136,14 +136,14 @@ class DiscriminatorS(torch.nn.Module):
         )
         self.conv_post = norm_f(Conv1d(1024, 1, 3, 1, padding=1))
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         """
         Args:
-            x (Tensor): input waveform.
+            x: input waveform.
 
         Returns:
-            Tensor: discriminator scores.
-            List[Tensor]: list of features from the convolutiona layers.
+            x: discriminator scores.
+            feat: list of features from the convolutiona layers.
         """
         feat = []
         for conv in self.convs:
@@ -173,20 +173,22 @@ class VitsDiscriminator(nn.Module):
         self.nets.append(DiscriminatorS(use_spectral_norm=use_spectral_norm))
         self.nets.extend([DiscriminatorP(i, use_spectral_norm=use_spectral_norm) for i in periods])
 
-    def forward(self, x, x_hat=None):
+    def forward(self, x: torch.Tensor, x_hat: torch.Tensor | None = None):
         """
         Args:
-            x (Tensor): ground truth waveform.
-            x_hat (Tensor): predicted waveform.
+            x: ground truth waveform.
+            x_hat: predicted waveform.
 
         Returns:
-            List[Tensor]: discriminator scores.
-            List[List[Tensor]]: list of list of features from each layers of each discriminator.
+            x_scores: discriminator scores.
+            x_feats: list of features from the discriminator.
+            x_hat_scores: discriminator scores for the predicted waveform.
+            x_hat_feats: list of features from the discriminator for the predicted waveform
         """
         x_scores = []
-        x_hat_scores = [] if x_hat is not None else None
+        x_hat_scores = []
         x_feats = []
-        x_hat_feats = [] if x_hat is not None else None
+        x_hat_feats = []
         for net in self.nets:
             x_score, x_feat = net(x)
             x_scores.append(x_score)
@@ -195,4 +197,6 @@ class VitsDiscriminator(nn.Module):
                 x_hat_score, x_hat_feat = net(x_hat)
                 x_hat_scores.append(x_hat_score)
                 x_hat_feats.append(x_hat_feat)
-        return x_scores, x_feats, x_hat_scores, x_hat_feats
+        x_hat_scores_out = x_hat_scores if x_hat is not None else None
+        x_hat_feats_out = x_hat_feats if x_hat is not None else None
+        return x_scores, x_feats, x_hat_scores_out, x_hat_feats_out
