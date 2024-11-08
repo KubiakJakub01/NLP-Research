@@ -1,5 +1,6 @@
 from torch import nn
 
+from .discriminator import VitsDiscriminator
 from .hifigan import HifiganGenerator
 from .hparams import VITSHparams
 from .networks import DurationPredictor, PosteriorEncoder, ResidualCouplingBlocks
@@ -71,6 +72,16 @@ class VITS(nn.Module):
             conv_post_weight_norm=False,
             conv_post_bias=False,
         )
+
+        if self.hparams.init_discriminator:
+            self.disc = VitsDiscriminator(
+                periods=self.hparams.periods_multi_period_discriminator,
+                use_spectral_norm=self.hparams.use_spectral_norm_disriminator,
+            )
+
+    @property
+    def device(self):
+        return next(self.parameters()).device
 
     def forward(self, x):
         return x
