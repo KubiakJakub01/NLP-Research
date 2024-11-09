@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from .discriminator import VitsDiscriminator
@@ -83,5 +84,57 @@ class VITS(nn.Module):
     def device(self):
         return next(self.parameters()).device
 
-    def forward(self, x):
-        return x
+    def forward(  # pylint: disable=dangerous-default-value
+        self,
+        x: torch.Tensor,
+        x_lengths: torch.Tensor,
+        y: torch.Tensor,
+        y_lengths: torch.Tensor,
+        waveform: torch.Tensor,
+        aux_input: dict | None = None,
+    ):
+        """Forward pass of the model.
+
+        Args:
+            x: Batch of input character sequence IDs.
+            x_lengths: Batch of input character sequence lengths.
+            y: Batch of input spectrograms.
+            y_lengths: Batch of input spectrogram lengths.
+            waveform: Batch of ground truth waveforms per sample.
+            aux_input: Auxiliary inputs for multi-speaker and multi-lingual training.
+                Defaults to {"d_vectors": None, "speaker_ids": None, "language_ids": None}.
+
+        Returns:
+            Dict: model outputs keyed by the output name.
+
+        Shapes:
+            - x: :math:`[B, T_seq]`
+            - x_lengths: :math:`[B]`
+            - y: :math:`[B, C, T_spec]`
+            - y_lengths: :math:`[B]`
+            - waveform: :math:`[B, 1, T_wav]`
+            - d_vectors: :math:`[B, C, 1]`
+            - speaker_ids: :math:`[B]`
+            - language_ids: :math:`[B]`
+
+        Return Shapes:
+            - model_outputs: :math:`[B, 1, T_wav]`
+            - alignments: :math:`[B, T_seq, T_dec]`
+            - z: :math:`[B, C, T_dec]`
+            - z_p: :math:`[B, C, T_dec]`
+            - m_p: :math:`[B, C, T_dec]`
+            - logs_p: :math:`[B, C, T_dec]`
+            - m_q: :math:`[B, C, T_dec]`
+            - logs_q: :math:`[B, C, T_dec]`
+            - waveform_seg: :math:`[B, 1, spec_seg_size * hop_length]`
+            - gt_spk_emb: :math:`[B, 1, speaker_encoder.proj_dim]`
+            - syn_spk_emb: :math:`[B, 1, speaker_encoder.proj_dim]`
+        """
+        return {
+            'x': x,
+            'x_lengths': x_lengths,
+            'y': y,
+            'y_lengths': y_lengths,
+            'waveform': waveform,
+            'aux_input': aux_input,
+        }
