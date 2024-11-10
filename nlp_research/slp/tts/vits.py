@@ -1,5 +1,7 @@
 import torch
+from einops import rearrange
 from torch import nn
+from torch.nn import functional as F
 
 from .discriminator import VitsDiscriminator
 from .hifigan import HifiganGenerator
@@ -130,11 +132,35 @@ class VITS(nn.Module):
             - gt_spk_emb: :math:`[B, 1, speaker_encoder.proj_dim]`
             - syn_spk_emb: :math:`[B, 1, speaker_encoder.proj_dim]`
         """
+        g, lid, _ = self._set_cond_input(aux_input)
+
         return {
             'x': x,
             'x_lengths': x_lengths,
             'y': y,
             'y_lengths': y_lengths,
             'waveform': waveform,
-            'aux_input': aux_input,
+            'g': g,
+            'lid': lid,
         }
+
+    @staticmethod
+    def _set_cond_input(aux_input: dict | None):
+        """Set the speaker conditioning input based on the multi-speaker mode."""
+        g, lid, durations = None, None, None
+        if aux_input is None:
+            return g, lid, durations
+        if 'd_vectors' in aux_input and aux_input['d_vectors'] is not None:
+            g = rearrange(F.normalize(aux_input['d_vectors']), '... -> ... 1')
+            if g.ndim == 2:
+                g = rearrange(g, 'b 1 -> 1 b 1')
+
+        if 'language_ids' in aux_input and aux_input['language_ids'] is not None:
+            lid = aux_input['language_ids']
+            if lid.ndim == 0:
+                lid = lid.unsqueeze_(0)
+
+        if 'durations' in aux_input and aux_input['durations'] is not None:
+            durations = aux_input['durations']
+
+        return g, lid, durations
