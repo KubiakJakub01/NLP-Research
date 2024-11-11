@@ -5,7 +5,7 @@ from pathlib import Path
 from faster_whisper import WhisperModel
 from tqdm import tqdm
 
-from ..utils import log_debug, log_info
+from ...utils import log_debug, log_info
 
 AVALIABLE_MODELS = ['tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2', 'large-v3']
 AVALIABLE_DTYPES = [
