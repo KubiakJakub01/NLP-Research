@@ -90,7 +90,7 @@ class WaveNet(nn.Module):
     ):  # pylint: disable=unused-argument
         output = torch.zeros_like(x)
         n_channels_tensor = torch.tensor([self.hidden_channels], dtype=torch.long)
-        x_mask = 1.0 if x_mask is None else x_mask
+        _x_mask = 1.0 if x_mask is None else x_mask
         if g is not None:
             g = self.cond_layer(g)
         for i in range(self.num_layers):
@@ -104,11 +104,11 @@ class WaveNet(nn.Module):
             acts = fused_add_tanh_sigmoid_multiply(x_in, g_l, n_channels_tensor)
             res_skip_acts = self.res_skip_layers[i](acts)
             if i < self.num_layers - 1:
-                x = (x + res_skip_acts[:, : self.hidden_channels, :]) * x_mask
+                x = (x + res_skip_acts[:, : self.hidden_channels, :]) * _x_mask
                 output = output + res_skip_acts[:, self.hidden_channels :, :]
             else:
                 output = output + res_skip_acts
-        return output * x_mask
+        return output * _x_mask
 
     def remove_weight_norm(self):
         if self.c_in_channels != 0:
