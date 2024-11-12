@@ -3,6 +3,7 @@ from einops import rearrange
 from torch import nn
 from torch.nn import functional as F
 
+from ...utils import log_info
 from .discriminator import VitsDiscriminator
 from .hifigan import HifiganGenerator
 from .hparams import VITSHparams
@@ -19,6 +20,8 @@ class VITS(nn.Module):
     def __init__(self, hparams: VITSHparams):
         super().__init__()
         self.hparams = hparams
+
+        self.init_multilingual()
 
         self.text_encoder = TextEncoder(
             n_vocab=self.hparams.num_chars,
@@ -143,6 +146,15 @@ class VITS(nn.Module):
             'g': g,
             'lid': lid,
         }
+
+    def init_multilingual(self):
+        """Initialize multilingual modules of a model."""
+        if self.hparams.use_language_embedding:
+            log_info(' > initialization of language-embedding layers.')
+            self.emb_l = nn.Embedding(
+                self.hparams.num_languages, self.hparams.embedded_language_dim
+            )
+            torch.nn.init.xavier_uniform_(self.emb_l.weight)
 
     @staticmethod
     def _set_cond_input(aux_input: dict | None):
