@@ -21,7 +21,7 @@ def sequence_mask(sequence_length: torch.Tensor, max_len: int | None = None):
     return rearrange(seq_range, 't -> 1 t') < rearrange(sequence_length, 'b -> b 1')
 
 
-def maximum_path_numpy(value, mask, max_neg_val=None):
+def maximum_path(value, mask, max_neg_val=None):
     """
     Monotonic alignment search algorithm
     Numpy-friendly version. It's about 4 times faster than torch version.
