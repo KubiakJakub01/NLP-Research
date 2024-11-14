@@ -1,3 +1,5 @@
+import math
+
 import torch
 from einops import rearrange
 from torch import nn
@@ -9,6 +11,7 @@ from .hifigan import HifiganGenerator
 from .hparams import VITSHparams
 from .networks import DurationPredictor, PosteriorEncoder, ResidualCouplingBlocks
 from .transformer import TextEncoder
+from .utils import maximum_path
 
 
 class VITS(nn.Module):
@@ -88,6 +91,36 @@ class VITS(nn.Module):
     @property
     def device(self):
         return next(self.parameters()).device
+
+    def forward_mas(self, outputs, z_p, m_p, logs_p, x, x_mask, y_mask, g, lang_emb):
+        # find the alignment path
+        attn_mask = rearrange(x_mask, 'b 1 t -> b 1 t 1') * rearrange(y_mask, 'b 1 t -> b 1 1 t')
+        with torch.inference_mode():
+            o_scale = torch.exp(-2 * logs_p)
+            logp1 = rearrange(torch.sum(-0.5 * math.log(2 * math.pi) - logs_p, [1]), 'b t -> b t 1')
+            logp2 = torch.einsum('klm, kln -> kmn', [o_scale, -0.5 * (z_p**2)])
+            logp3 = torch.einsum('klm, kln -> kmn', [m_p * o_scale, z_p])
+            logp4 = rearrange(torch.sum(-0.5 * (m_p**2) * o_scale, [1]), 'b t -> b t 1')
+            logp = logp2 + logp3 + logp1 + logp4
+            attn = maximum_path(logp, rearrange(attn_mask, 'b 1 1 t -> b 1 t')).detach()
+            attn = rearrange(attn, 'b t t_prime -> b 1 t t_prime')
+
+        # duration predictor
+        attn_durations = attn.sum(3)
+        attn_log_durations = torch.log(attn_durations + 1e-6) * x_mask
+        log_durations = self.duration_predictor(
+            x.detach() if self.hparams.detach_dp_input else x,
+            x_mask,
+            g=g.detach() if self.hparams.detach_dp_input and g is not None else g,
+            lang_emb=lang_emb.detach()
+            if self.hparams.detach_dp_input and lang_emb is not None
+            else lang_emb,
+        )
+        loss_duration = torch.sum((log_durations - attn_log_durations) ** 2, [1, 2]) / torch.sum(
+            x_mask
+        )
+        outputs['loss_duration'] = loss_duration
+        return outputs, attn
 
     def forward(  # pylint: disable=dangerous-default-value
         self,
