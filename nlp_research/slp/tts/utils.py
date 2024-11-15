@@ -87,3 +87,41 @@ def segment(x: torch.Tensor, segment_indices: torch.Tensor, segment_size=4, pad_
             x_i = torch.nn.functional.pad(x_i, (0, (index_end + 1) - x.size(2)))
         segments[i] = x_i[:, index_start:index_end]
     return segments
+
+
+def rand_segments(
+    x: torch.Tensor,
+    x_lengths: torch.Tensor | None = None,
+    segment_size=4,
+    let_short_samples=False,
+    pad_short=False,
+):
+    """Create random segments based on the input lengths.
+
+    Args:
+        x: Input tensor.
+        x_lengths: Input lengths.
+        segment_size: Expected output segment size.
+        let_short_samples: Allow shorter samples than the segment size.
+        pad_short: Pad the end of input tensor with zeros if shorter than the segment size.
+
+    Shapes:
+        - x: :math:`[B, C, T]`
+        - x_lengths: :math:`[B]`
+    """
+    B, _, T = x.size()
+    _x_lenghts = T if x_lengths is None else x_lengths.clone()
+    if pad_short and segment_size > T:
+        x = torch.nn.functional.pad(x, (0, segment_size - T))
+        T = segment_size
+    len_diff = _x_lenghts - segment_size
+    if let_short_samples:
+        _x_lenghts[len_diff < 0] = segment_size
+        len_diff = _x_lenghts - segment_size
+    else:
+        assert all(
+            len_diff > 0
+        ), f'At least one sample is shorter than the segment size ({segment_size}). \n {_x_lenghts}'
+    segment_indices = (torch.rand([B]).type_as(x) * (len_diff + 1)).long()
+    ret = segment(x, segment_indices, segment_size, pad_short=pad_short)
+    return ret, segment_indices
