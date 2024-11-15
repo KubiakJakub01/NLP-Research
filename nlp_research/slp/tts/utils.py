@@ -61,3 +61,29 @@ def maximum_path(value, mask, max_neg_val=None):
     path = path * mask.astype(np.float32)
     path = torch.from_numpy(path).to(device=device, dtype=dtype)
     return path
+
+
+def segment(x: torch.Tensor, segment_indices: torch.Tensor, segment_size=4, pad_short=False):
+    """Segment each sample in a batch based on the provided segment indices
+
+    Args:
+        x: Input tensor.
+        segment_indices: Segment indices.
+        segment_size: Expected output segment size.
+        pad_short: Pad the end of input tensor with zeros if shorter than the segment size.
+    """
+    # pad the input tensor if it is shorter than the segment size
+    if pad_short and x.shape[-1] < segment_size:
+        x = torch.nn.functional.pad(x, (0, segment_size - x.size(2)))
+
+    segments = torch.zeros_like(x[:, :, :segment_size])
+
+    for i in range(x.size(0)):
+        index_start = segment_indices[i]
+        index_end = index_start + segment_size
+        x_i = x[i]
+        if pad_short and index_end >= x.size(2):
+            # pad the sample if it is shorter than the segment size
+            x_i = torch.nn.functional.pad(x_i, (0, (index_end + 1) - x.size(2)))
+        segments[i] = x_i[:, index_start:index_end]
+    return segments
