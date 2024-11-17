@@ -58,11 +58,6 @@ class VITSHparams(BaseModel):
     freeze_flow_decoder: bool = False
     freeze_waveform_decoder: bool = False
     encoder_sample_rate: int = 22050
-    audio_sample_rate: int = 22050
     interpolate_z: bool = True
     reinit_DP: bool = False
     reinit_text_encoder: bool = False
-
-    @property
-    def interpolate_factor(self) -> float:
-        return self.audio_sample_rate / self.encoder_sample_rate
