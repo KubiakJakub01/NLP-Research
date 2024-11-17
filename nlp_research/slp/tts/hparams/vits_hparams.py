@@ -58,6 +58,7 @@ class VITSHparams(BaseModel):
     freeze_flow_decoder: bool = False
     freeze_waveform_decoder: bool = False
     encoder_sample_rate: int = 22050
+    hop_length: int = 256
     interpolate_z: bool = True
     reinit_DP: bool = False
     reinit_text_encoder: bool = False

@@ -11,7 +11,7 @@ from .hifigan import HifiganGenerator
 from .hparams import VITSHparams
 from .networks import DurationPredictor, PosteriorEncoder, ResidualCouplingBlocks
 from .transformer import TextEncoder
-from .utils import maximum_path
+from .utils import maximum_path, rand_segments, segment
 
 
 class VITS(nn.Module):
@@ -168,17 +168,62 @@ class VITS(nn.Module):
             - gt_spk_emb: :math:`[B, 1, speaker_encoder.proj_dim]`
             - syn_spk_emb: :math:`[B, 1, speaker_encoder.proj_dim]`
         """
+        outputs: dict[str, torch.Tensor] = {}
         g, lid, _ = self._set_cond_input(aux_input)
 
-        return {
-            'x': x,
-            'x_lengths': x_lengths,
-            'y': y,
-            'y_lengths': y_lengths,
-            'waveform': waveform,
-            'g': g,
-            'lid': lid,
-        }
+        # language embedding
+        lang_emb = None
+        if self.hparams.use_language_embedding and lid is not None:
+            lang_emb = self.emb_l(lid).unsqueeze(-1)
+
+        x, m_p, logs_p, x_mask = self.text_encoder(x, x_lengths, lang_emb=lang_emb)
+
+        # posterior encoder
+        z, m_q, logs_q, y_mask = self.posterior_encoder(y, y_lengths, g=g)
+
+        # flow layers
+        z_p = self.flow(z, y_mask, g=g)
+
+        # duration predictor
+        outputs, attn = self.forward_mas(
+            outputs, z_p, m_p, logs_p, x, x_mask, y_mask, g=g, lang_emb=lang_emb
+        )
+
+        # expand prior
+        m_p = torch.einsum('klmn, kjm -> kjn', [attn, m_p])
+        logs_p = torch.einsum('klmn, kjm -> kjn', [attn, logs_p])
+
+        # select a random feature segment for the waveform decoder
+        z_slice, slice_ids = rand_segments(
+            z, y_lengths, self.hparams.spec_segment_size, let_short_samples=True, pad_short=True
+        )
+
+        # waveform decoder
+        o = self.vocoder(z_slice, g=g)
+
+        wav_seg = segment(
+            waveform,
+            slice_ids * self.hparams.hop_length,
+            self.hparams.spec_segment_size * self.hparams.hop_length,
+            pad_short=True,
+        )
+
+        outputs.update(
+            {
+                'model_outputs': o,
+                'alignments': attn.squeeze(1),
+                'm_p': m_p,
+                'logs_p': logs_p,
+                'z': z,
+                'z_p': z_p,
+                'm_q': m_q,
+                'logs_q': logs_q,
+                'waveform_seg': wav_seg,
+                'slice_ids': slice_ids,
+            }
+        )
+
+        return outputs
 
     def init_multilingual(self):
         """Initialize multilingual modules of a model."""
