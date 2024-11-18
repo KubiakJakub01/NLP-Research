@@ -103,7 +103,7 @@ class VITS(nn.Module):
             logp4 = rearrange(torch.sum(-0.5 * (m_p**2) * o_scale, [1]), 'b t -> b t 1')
             logp = logp2 + logp3 + logp1 + logp4
             attn = maximum_path(logp, rearrange(attn_mask, 'b 1 1 t -> b 1 t')).detach()
-            attn = rearrange(attn, 'b t t_prime -> b 1 t t_prime')
+            attn = rearrange(attn, 'b t t1 -> b 1 t t1')
 
         # duration predictor
         attn_durations = attn.sum(3)
@@ -211,7 +211,7 @@ class VITS(nn.Module):
         outputs.update(
             {
                 'model_outputs': o,
-                'alignments': attn.squeeze(1),
+                'alignments': rearrange(attn, 'b 1 t t1 -> b t t1'),
                 'm_p': m_p,
                 'logs_p': logs_p,
                 'z': z,
