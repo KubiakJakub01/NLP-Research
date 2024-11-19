@@ -225,6 +225,41 @@ class VITS(nn.Module):
 
         return outputs
 
+    @torch.inference_mode()
+    def inference(
+        self,
+        x: torch.Tensor,
+        aux_input: dict | None = None,
+    ):
+        """Inference method for the model.
+
+        Args:
+            x: Batch of input character sequence IDs.
+            aux_input: Auxiliary inputs for multi-speaker and multi-lingual training.
+                Defaults to {"d_vectors": None, "speaker_ids": None, "language_ids": None}.
+
+        Returns:
+            Dict: model outputs keyed by the output name.
+
+        Shapes:
+            - x: :math:`[B, T_seq]`
+            - x_lengths: :math:`[B]`
+            - d_vectors: :math:`[B, C]`
+            - speaker_ids: :math:`[B]`
+
+        Return Shapes:
+            - model_outputs: :math:`[B, 1, T_wav]`
+            - alignments: :math:`[B, T_seq, T_dec]`
+            - z: :math:`[B, C, T_dec]`
+            - z_p: :math:`[B, C, T_dec]`
+            - m_p: :math:`[B, C, T_dec]`
+            - logs_p: :math:`[B, C, T_dec]`
+        """
+        return {
+            'x': x,
+            'aux_input': aux_input,
+        }
+
     def init_multilingual(self):
         """Initialize multilingual modules of a model."""
         if self.hparams.use_language_embedding:
