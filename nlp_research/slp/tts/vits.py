@@ -289,3 +289,9 @@ class VITS(nn.Module):
             durations = aux_input['durations']
 
         return g, lid, durations
+
+    @staticmethod
+    def _set_x_lengths(x, aux_input):
+        if 'x_lengths' in aux_input and aux_input['x_lengths'] is not None:
+            return aux_input['x_lengths']
+        return torch.tensor(x.shape[1:2]).to(x.device)
