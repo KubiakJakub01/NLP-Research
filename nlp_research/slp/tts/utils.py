@@ -3,6 +3,12 @@ import torch
 from einops import rearrange
 
 
+def convert_pad_shape(pad_shape):
+    lens = pad_shape[::-1]
+    pad_shape = [item for sublist in lens for item in sublist]
+    return pad_shape
+
+
 # from https://gist.github.com/jihunchoi/f1434a77df9db1bb337417854b398df1
 def sequence_mask(sequence_length: torch.Tensor, max_len: int | None = None):
     """Create a sequence mask for filtering padding in a sequence tensor.
