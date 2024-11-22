@@ -11,7 +11,7 @@ from .hifigan import HifiganGenerator
 from .hparams import VITSHparams
 from .networks import DurationPredictor, PosteriorEncoder, ResidualCouplingBlocks
 from .transformer import TextEncoder
-from .utils import maximum_path, rand_segments, segment
+from .utils import generate_path, maximum_path, rand_segments, segment, sequence_mask
 
 
 class VITS(nn.Module):
@@ -255,9 +255,34 @@ class VITS(nn.Module):
             - m_p: :math:`[B, C, T_dec]`
             - logs_p: :math:`[B, C, T_dec]`
         """
+        outputs: dict[str, torch.Tensor] = {}
+        g, lid, _ = self._set_cond_input(aux_input)
+        x_lengths = self._set_x_lengths(x, aux_input)
+
+        # language embedding
+        lang_emb = None
+        if self.args.use_language_embedding and lid is not None:
+            lang_emb = self.emb_l(lid).unsqueeze(-1)
+
+        x, m_p, logs_p, x_mask = self.text_encoder(x, x_lengths, lang_emb=lang_emb)
+
+        logw = self.duration_predictor(x, x_mask, g=g, lang_emb=lang_emb)
+        w = torch.exp(logw) * x_mask * self.length_scale
+
+        w_ceil = torch.ceil(w)
+        y_lengths = torch.clamp_min(torch.sum(w_ceil, [1, 2]), 1).long()
+        y_mask = rearrange(sequence_mask(y_lengths, None).to(x_mask.dtype), 'b t -> b 1 t')
+
+        attn_mask = x_mask * rearrange(y_mask, 'b 1 t -> b t 1')
+        attn = generate_path(
+            w_ceil.squeeze(1), rearrange(attn_mask, 'b t_dec t_enc -> b t_dec t_enc')
+        )
+
         return {
-            'x': x,
-            'aux_input': aux_input,
+            'outputs': outputs,
+            'm_p': m_p,
+            'logs_p': logs_p,
+            'attn': attn,
         }
 
     def init_multilingual(self):
