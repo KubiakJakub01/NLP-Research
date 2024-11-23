@@ -135,7 +135,7 @@ def rand_segments(
         - x_lengths: :math:`[B]`
     """
     B, _, T = x.size()
-    _x_lenghts = T if x_lengths is None else x_lengths.clone()
+    _x_lenghts = torch.tensor(T) if x_lengths is None else x_lengths.clone()
     if pad_short and segment_size > T:
         x = torch.nn.functional.pad(x, (0, segment_size - T))
         T = segment_size

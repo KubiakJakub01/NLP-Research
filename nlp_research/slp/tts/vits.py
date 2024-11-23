@@ -262,7 +262,7 @@ class VITS(nn.Module):
         # language embedding
         lang_emb = None
         if self.args.use_language_embedding and lid is not None:
-            lang_emb = self.emb_l(lid).unsqueeze(-1)
+            lang_emb = rearrange(self.emb_l(lid), '... -> ... 1')
 
         x, m_p, logs_p, x_mask = self.text_encoder(x, x_lengths, lang_emb=lang_emb)
 
