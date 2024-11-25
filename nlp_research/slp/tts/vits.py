@@ -278,12 +278,24 @@ class VITS(nn.Module):
             w_ceil.squeeze(1), rearrange(attn_mask, 'b t_dec t_enc -> b t_dec t_enc')
         )
 
-        return {
-            'outputs': outputs,
+        m_p = torch.matmul(attn.transpose(1, 2), m_p.transpose(1, 2)).transpose(1, 2)
+        logs_p = torch.matmul(attn.transpose(1, 2), logs_p.transpose(1, 2)).transpose(1, 2)
+
+        z_p = m_p + torch.randn_like(m_p) * torch.exp(logs_p) * self.hparams.inference_noise_scale
+        z = self.flow(z_p, y_mask, g=g, reverse=True)
+        o = self.waveform_decoder((z * y_mask)[:, :, : self.hparams.max_inference_len], g=g)
+
+        outputs = {
+            'model_outputs': o,
+            'alignments': attn.squeeze(1),
+            'durations': w_ceil,
+            'z': z,
+            'z_p': z_p,
             'm_p': m_p,
             'logs_p': logs_p,
-            'attn': attn,
+            'y_mask': y_mask,
         }
+        return outputs
 
     def init_multilingual(self):
         """Initialize multilingual modules of a model."""
