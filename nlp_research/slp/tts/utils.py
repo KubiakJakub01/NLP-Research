@@ -4,6 +4,14 @@ import torch.nn.functional as F
 from einops import rearrange
 
 
+def exists(v):
+    return v is not None
+
+
+def default(v, d):
+    return v if exists(v) else d
+
+
 def convert_pad_shape(pad_shape):
     lens = pad_shape[::-1]
     pad_shape = [item for sublist in lens for item in sublist]
