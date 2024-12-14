@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from einops import rearrange
+from librosa.filters import mel as librosa_mel_fn
 
 
 def exists(v):
@@ -158,3 +159,65 @@ def rand_segments(
     segment_indices = (torch.rand([B]).type_as(x) * (len_diff + 1)).long()
     ret = segment(x, segment_indices, segment_size, pad_short=pad_short)
     return ret, segment_indices
+
+
+def wav_to_mel(y, n_fft, num_mels, sample_rate, hop_length, win_length, fmin, fmax, center=False):
+    """
+    Args Shapes:
+        - y : :math:`[B, 1, T]`
+
+    Return Shapes:
+        - spec : :math:`[B,C,T]`
+    """
+    y = rearrange(y, 'b 1 t -> b t')
+
+    if torch.min(y) < -1.0:
+        print('min value is ', torch.min(y))
+    if torch.max(y) > 1.0:
+        print('max value is ', torch.max(y))
+
+    mel_basis = librosa_mel_fn(sr=sample_rate, n_fft=n_fft, n_mels=num_mels, fmin=fmin, fmax=fmax)
+    hann_window = torch.hann_window(win_length).to(dtype=y.dtype, device=y.device)
+
+    y = torch.nn.functional.pad(
+        rearrange(y, 'b t -> b 1 t'),
+        (int((n_fft - hop_length) / 2), int((n_fft - hop_length) / 2)),
+        mode='reflect',
+    )
+    y = rearrange(y, 'b 1 t -> b t')
+
+    spec = torch.stft(
+        y,
+        n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+        window=hann_window,
+        center=center,
+        pad_mode='reflect',
+        normalized=False,
+        onesided=True,
+        return_complex=False,
+    )
+
+    spec = torch.sqrt(spec.pow(2).sum(-1) + 1e-6)
+    spec = torch.matmul(mel_basis, spec)
+    spec = amp_to_db(spec)
+    return spec
+
+
+def _amp_to_db(x, C=1, clip_val=1e-5):
+    return torch.log(torch.clamp(x, min=clip_val) * C)
+
+
+def _db_to_amp(x, C=1):
+    return torch.exp(x) / C
+
+
+def amp_to_db(magnitudes):
+    output = _amp_to_db(magnitudes)
+    return output
+
+
+def db_to_amp(magnitudes):
+    output = _db_to_amp(magnitudes)
+    return output
