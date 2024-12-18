@@ -1,5 +1,7 @@
+import argparse
 import os
 import subprocess
+from functools import partial
 from pathlib import Path
 
 import gradio as gr
@@ -11,7 +13,6 @@ def download_clip(
     output_filename,
     start_time,
     end_time,
-    tmp_dir='/tmp/musiccaps',
     num_attempts=5,
     url_base='https://www.youtube.com/watch?v=',
 ):
@@ -38,7 +39,7 @@ def download_clip(
     return status, 'Downloaded'
 
 
-def main(
+def download(
     data_dir: str,
     sampling_rate: int = 44100,
     limit: int = None,
@@ -84,17 +85,40 @@ def main(
     ).cast_column('audio', Audio(sampling_rate=sampling_rate))
 
 
-def get_example(idx):
+def get_example(idx, ds):
     ex = ds[idx]
     return ex['audio']['path'], ex['caption']
 
 
-if __name__ == '__main__':
-    ds = main('/home/jakub/Documents/data/music-caps', num_proc=2, limit=32)
+def main(
+    data_dir: str = 'data/music-caps',
+    sampling_rate: int = 44100,
+    limit: int = None,
+    num_proc: int = 1,
+    writer_batch_size: int = 1000,
+):
+    ds = download(data_dir, sampling_rate, limit, num_proc, writer_batch_size)
 
     gr.Interface(
-        get_example,
+        partial(get_example, ds=ds),
         inputs=gr.Slider(0, len(ds) - 1, value=0, step=1),
         outputs=['audio', 'textarea'],
         live=True,
     ).launch()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', type=str, default='data/music-caps')
+    parser.add_argument('--sampling_rate', type=int, default=44100)
+    parser.add_argument('--limit', type=int, default=None)
+    parser.add_argument('--num_proc', type=int, default=1)
+    parser.add_argument('--writer_batch_size', type=int, default=1000)
+    args = parser.parse_args()
+    main(
+        data_dir=args.data_dir,
+        sampling_rate=args.sampling_rate,
+        limit=args.limit,
+        num_proc=args.num_proc,
+        writer_batch_size=args.writer_batch_size,
+    )
