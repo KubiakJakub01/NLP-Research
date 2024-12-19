@@ -92,7 +92,7 @@ def get_example(idx, ds):
 def main(
     data_dir: Path,
     sampling_rate: int = 44100,
-    limit: int = None,
+    limit: int | None = None,
     num_proc: int = 1,
     writer_batch_size: int = 1000,
 ):
