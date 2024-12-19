@@ -69,7 +69,7 @@ def download(
         status = True
         if not os.path.exists(outfile_path):
             status = False
-            status, log = download_clip(
+            status, _ = download_clip(
                 example['ytid'],
                 outfile_path,
                 example['start_s'],
