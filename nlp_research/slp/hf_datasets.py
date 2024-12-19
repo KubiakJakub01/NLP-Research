@@ -40,9 +40,9 @@ def download_clip(
 
 
 def download(
-    data_dir: str,
+    data_dir: Path,
     sampling_rate: int = 44100,
-    limit: int = None,
+    limit: int | None = None,
     num_proc: int = 1,
     writer_batch_size: int = 1000,
 ):
@@ -61,7 +61,6 @@ def download(
         print(f'Limiting to {limit} examples')
         ds = ds.select(range(limit))
 
-    data_dir = Path(data_dir)
     data_dir.mkdir(exist_ok=True, parents=True)
 
     def process(example):
@@ -91,7 +90,7 @@ def get_example(idx, ds):
 
 
 def main(
-    data_dir: str = 'data/music-caps',
+    data_dir: Path,
     sampling_rate: int = 44100,
     limit: int = None,
     num_proc: int = 1,
@@ -109,7 +108,7 @@ def main(
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='data/music-caps')
+    parser.add_argument('--data_dir', type=Path, default='data/music-caps')
     parser.add_argument('--sampling_rate', type=int, default=44100)
     parser.add_argument('--limit', type=int, default=None)
     parser.add_argument('--num_proc', type=int, default=1)
