@@ -5,6 +5,7 @@ from nlp_research.deep_ml.linear_algebra import (
     calculate_covariance_matrix,
     matrix_dot_vector,
     solve_jacobi,
+    svd_2x2_singular_values,
 )
 
 
@@ -37,3 +38,24 @@ def test_calculate_covariance_matrix(vectors, expected):
 )
 def test_solve_jacobi(A, b, n, expected):
     assert solve_jacobi(A, b, n) == expected
+
+
+@pytest.mark.parametrize(
+    'A, expected',
+    [
+        (
+            np.array([[2, 1], [1, 2]]),
+            (
+                np.array([[-0.70710678, -0.70710678], [-0.70710678, 0.70710678]]),
+                np.array([3.0, 1.0]),
+                np.array([[-0.70710678, -0.70710678], [-0.70710678, 0.70710678]]),
+            ),
+        )
+    ],
+)
+def test_svd_2x2_singular_values(A, expected):
+    u_expected, s_expected, v_t_expected = expected
+    u, s, v_t = svd_2x2_singular_values(A)
+    assert np.allclose(u, u_expected)
+    assert np.allclose(s, s_expected)
+    assert np.allclose(v_t, v_t_expected)
