@@ -67,3 +67,8 @@ def svd_2x2_singular_values(A: np.ndarray) -> tuple:
     u = a @ v @ s_inv
 
     return (u, s, v.T)
+
+
+def linear_regression_normal_equation(X: list[list[float]], y: list[float]) -> list[float]:
+    thetas = np.linalg.inv(np.transpose(X) @ X) @ np.transpose(X) @ y
+    return thetas
