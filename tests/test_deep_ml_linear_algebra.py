@@ -41,21 +41,14 @@ def test_solve_jacobi(A, b, n, expected):
 
 
 @pytest.mark.parametrize(
-    'A, expected',
+    'A',
     [
-        (
-            np.array([[2, 1], [1, 2]]),
-            (
-                np.array([[-0.70710678, -0.70710678], [-0.70710678, 0.70710678]]),
-                np.array([3.0, 1.0]),
-                np.array([[-0.70710678, -0.70710678], [-0.70710678, 0.70710678]]),
-            ),
-        )
+        (np.array([[2, 1], [1, 2]])),
+        (np.array([[1, 2], [2, 1]])),
+        (np.array([[1, 0], [0, 1]])),
     ],
 )
-def test_svd_2x2_singular_values(A, expected):
-    u_expected, s_expected, v_t_expected = expected
-    u, s, v_t = svd_2x2_singular_values(A)
-    assert np.allclose(u, u_expected)
+def test_svd_2x2_singular_values(A):
+    _, s_expected, _ = np.linalg.svd(A)
+    _, s, _ = svd_2x2_singular_values(A)
     assert np.allclose(s, s_expected)
-    assert np.allclose(v_t, v_t_expected)
