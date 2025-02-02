@@ -3,6 +3,7 @@ import pytest
 
 from nlp_research.deep_ml.linear_algebra import (
     calculate_covariance_matrix,
+    linear_regression_normal_equation,
     matrix_dot_vector,
     solve_jacobi,
     svd_2x2_singular_values,
@@ -52,3 +53,13 @@ def test_svd_2x2_singular_values(A):
     _, s_expected, _ = np.linalg.svd(A)
     _, s, _ = svd_2x2_singular_values(A)
     assert np.allclose(s, s_expected)
+
+
+@pytest.mark.parametrize(
+    'X, y, expected',
+    [
+        (np.array([[1, 1], [1, 2], [1, 3]]), np.array([1, 2, 3]), [0.0, 1.0]),
+    ],
+)
+def test_linear_regression_normal_equation(X, y, expected):
+    assert np.allclose(linear_regression_normal_equation(X, y), expected)
