@@ -81,4 +81,4 @@ def linear_regression_gradient_descent(
     m = len(y)
     for _ in range(iterations):
         theta = theta - alpha / m * (X.T @ (X @ theta - y))
-    return theta
+    return theta.round(4)
