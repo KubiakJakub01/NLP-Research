@@ -72,3 +72,13 @@ def svd_2x2_singular_values(A: np.ndarray) -> tuple:
 def linear_regression_normal_equation(X: np.ndarray, y: np.ndarray) -> np.ndarray:
     theta = np.round(np.linalg.inv(X.T @ X) @ X.T @ y, 4)
     return theta
+
+
+def linear_regression_gradient_descent(
+    X: np.ndarray, y: np.ndarray, alpha: float, iterations: int
+) -> np.ndarray:
+    theta = np.zeros(X.shape[1])
+    m = len(y)
+    for _ in range(iterations):
+        theta = theta - alpha / m * (X.T @ (X @ theta - y))
+    return theta
