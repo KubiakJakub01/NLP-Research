@@ -82,3 +82,13 @@ def linear_regression_gradient_descent(
     for _ in range(iterations):
         theta = theta - alpha / m * (X.T @ (X @ theta - y))
     return theta.round(4)
+
+
+def feature_scaling(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    mean = np.mean(data, axis=0)
+    std = np.std(data, axis=0)
+    max_ = np.max(data, axis=0)
+    min_ = np.min(data, axis=0)
+    standardized_data = np.round((data - mean) / std, 4, 4)
+    normalized_data = np.round(((data - min_) / (max_ - min_)), 4)
+    return standardized_data, normalized_data
