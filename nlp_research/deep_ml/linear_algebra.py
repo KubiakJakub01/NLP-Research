@@ -94,9 +94,8 @@ def feature_scaling(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return standardized_data, normalized_data
 
 
-def euclidean_distance(point_1, point_2):
-    dist = sum((p_2 - p_1) ** 2 for p_1, p_2 in zip(point_1, point_2, strict=False)) ** (1 / 2)
-    return dist
+def euclidean_distance(a, b):
+    return np.sqrt(((a - b) ** 2).sum(axis=1))
 
 
 def k_means_clustering(
