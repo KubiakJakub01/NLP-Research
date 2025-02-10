@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 
 
@@ -92,3 +94,36 @@ def feature_scaling(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     standardized_data = np.round((data - mean) / std, 4, 4)
     normalized_data = np.round(((data - min_) / (max_ - min_)), 4)
     return standardized_data, normalized_data
+
+
+def euclidean_distance(point_1, point_2):
+    dist = sum((p_2 - p_1) ** 2 for p_1, p_2 in zip(point_1, point_2, strict=False)) ** (1 / 2)
+    return dist
+
+
+def k_means_clustering(
+    points: list[tuple[float, float]],
+    initial_centroids: list[tuple[float, float]],
+    max_iterations: int,
+) -> list[tuple[float, float]]:
+    for _ in range(max_iterations):
+        cluster_points_dict = defaultdict(list)
+        for point in points:
+            new_center_ids = np.argmin(
+                [
+                    euclidean_distance(point, initial_centroid)
+                    for initial_centroid in initial_centroids
+                ]
+            )
+            cluster_points_dict[new_center_ids].append(point)
+
+        new_centroids = []
+        for cluster_ids, cluster_points in cluster_points_dict.items():
+            if len(cluster_points) > 0:
+                new_centroid = np.mean(cluster_points, axis=0).tolist()
+            else:
+                new_centroid = initial_centroids[cluster_ids]
+            new_centroids.append(new_centroid)
+        initial_centroids = new_centroids.copy()
+
+    return initial_centroids
