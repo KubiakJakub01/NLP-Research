@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 import numpy as np
 
 
@@ -106,24 +104,20 @@ def k_means_clustering(
     initial_centroids: list[tuple[float, float]],
     max_iterations: int,
 ) -> list[tuple[float, float]]:
+    points_ = np.array(points)
+    centroids = np.array(initial_centroids)
+
     for _ in range(max_iterations):
-        cluster_points_dict = defaultdict(list)
-        for point in points:
-            new_center_ids = np.argmin(
-                [
-                    euclidean_distance(point, initial_centroid)
-                    for initial_centroid in initial_centroids
-                ]
-            )
-            cluster_points_dict[new_center_ids].append(point)
+        distances = np.array(
+            [[euclidean_distance(point, centroid) for centroid in centroids] for point in points]
+        )
+        cluster_assignment = np.argmin(distances, axis=1)
+        new_centroids = np.array(
+            [points_[cluster_assignment == i].mean(axis=0) for i in range(len(centroids))]
+        )
 
-        new_centroids = []
-        for cluster_ids, cluster_points in cluster_points_dict.items():
-            if len(cluster_points) > 0:
-                new_centroid = np.mean(cluster_points, axis=0).tolist()
-            else:
-                new_centroid = initial_centroids[cluster_ids]
-            new_centroids.append(new_centroid)
-        initial_centroids = new_centroids.copy()
+        if np.all(centroids == new_centroids):
+            break
+        centroids = new_centroids
 
-    return initial_centroids
+    return centroids.tolist()
