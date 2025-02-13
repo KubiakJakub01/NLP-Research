@@ -94,8 +94,8 @@ def feature_scaling(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return standardized_data, normalized_data
 
 
-def euclidean_distance(a, b):
-    return np.sqrt(((a - b) ** 2).sum(axis=1))
+def euclidean_distance(a: np.ndarray, b: np.ndarray) -> float:
+    return np.round(np.sqrt(np.sum((a - b) ** 2)), 4)
 
 
 def k_means_clustering(
@@ -120,3 +120,23 @@ def k_means_clustering(
         centroids = new_centroids
 
     return centroids.tolist()
+
+
+def cross_validation_split(data: np.ndarray, k: int, seed=42) -> list:
+    np.random.seed(seed)
+    indices = np.arange(len(data))
+    np.random.shuffle(indices)
+
+    folds = np.array_split(indices, k)
+    splits = []
+
+    for i in range(k):
+        test_idx = folds[i]
+        train_idx = np.hstack([folds[j] for j in range(k) if j != i])
+
+        train_set = data[train_idx]
+        test_set = data[test_idx]
+
+        splits.append([train_set.tolist(), test_set.tolist()])
+
+    return splits
