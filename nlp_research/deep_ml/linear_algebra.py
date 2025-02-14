@@ -140,3 +140,15 @@ def cross_validation_split(data: np.ndarray, k: int, seed=42) -> list:
         splits.append([train_set.tolist(), test_set.tolist()])
 
     return splits
+
+
+def pca(data: np.ndarray, k: int) -> np.ndarray:
+    mean = np.mean(data, axis=0)
+    std = np.std(data, axis=0)
+    normalized = (data - mean) / std
+    cov = np.cov(normalized, rowvar=False)
+    eigenvalues, eigenvectors = np.linalg.eig(cov)
+    sorted_indices = np.argsort(eigenvalues)[::-1]
+    sorted_eigenvectors = eigenvectors[:, sorted_indices]
+    principal_components = sorted_eigenvectors[:, :k]
+    return np.round(principal_components, 4)
