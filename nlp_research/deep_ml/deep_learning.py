@@ -33,3 +33,32 @@ def single_neuron_model(
     ) / len(labels)
     mse = round(mse, 4)
     return probabilities, mse
+
+
+def train_neuron(  # pylint: disable=too-many-positional-arguments
+    features: np.ndarray,
+    labels: np.ndarray,
+    initial_weights: np.ndarray,
+    initial_bias: float,
+    learning_rate: float,
+    epochs: int,
+) -> tuple[np.ndarray, float, list[float]]:
+    n = labels.shape[0]
+    weights = initial_weights
+    bias = initial_bias
+    mse_values = []
+
+    for _ in range(epochs):
+        z = features @ weights + bias
+        pred = sigmoid(z)
+        loss = round(mse_loss(pred, labels), 4)
+        mse_values.append(loss)
+
+        dL_dpred = (2 / n) * (pred - labels)
+        dL_dz = dL_dpred * sigmoid_derivative(z)
+        dL_dw = features.T @ dL_dz
+        dL_db = np.sum(dL_dz)
+        weights -= learning_rate * dL_dw
+        bias -= learning_rate * dL_db
+
+    return np.round(weights, 4).tolist(), round(bias, 4), mse_values
