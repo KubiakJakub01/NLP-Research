@@ -11,6 +11,10 @@ def sigmoid_derivative(x: np.ndarray | float) -> np.ndarray | float:
     return sigmoid(x) * (1 - sigmoid(x))
 
 
+def mse_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    return np.mean((y_true - y_pred) ** 2)
+
+
 def softmax(scores: list[float]) -> list[float]:
     exp_sum = sum(math.exp(s) for s in scores)
     probabilities = [round(math.exp(s) / exp_sum, 4) for s in scores]
