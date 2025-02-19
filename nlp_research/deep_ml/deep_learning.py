@@ -1,9 +1,14 @@
 import math
 
+import numpy as np
 
-def sigmoid(z: float) -> float:
-    result = 1 / (1 + math.exp(-z))
-    return round(result, 4)
+
+def sigmoid(x: np.ndarray | float) -> np.ndarray | float:
+    return 1 / (1 + np.exp(-x))
+
+
+def sigmoid_derivative(x: np.ndarray | float) -> np.ndarray | float:
+    return sigmoid(x) * (1 - sigmoid(x))
 
 
 def softmax(scores: list[float]) -> list[float]:
