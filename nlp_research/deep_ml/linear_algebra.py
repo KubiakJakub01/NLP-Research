@@ -67,3 +67,10 @@ def svd_2x2_singular_values(A: np.ndarray) -> tuple:
     u = a @ v @ s_inv
 
     return (u, s, v.T)
+
+
+def transform_basis(B: np.ndarray, C: np.ndarray) -> np.ndarray:
+    C_inv = np.linalg.inv(C)
+    P = C_inv @ B
+    P = np.round(P, 4)
+    return P
