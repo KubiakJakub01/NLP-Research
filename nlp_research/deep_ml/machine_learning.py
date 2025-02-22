@@ -84,3 +84,12 @@ def pca(data: np.ndarray, k: int) -> np.ndarray:
     sorted_eigenvectors = eigenvectors[:, sorted_indices]
     principal_components = sorted_eigenvectors[:, :k]
     return np.round(principal_components, 4)
+
+
+def shuffle_data(
+    X: np.ndarray, y: np.ndarray, seed: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    np.random.seed(seed)
+    idx = np.arange(y.shape[0])
+    np.random.shuffle(idx)
+    return X[idx], y[idx]
