@@ -1,3 +1,5 @@
+from itertools import combinations_with_replacement
+
 import numpy as np
 
 
@@ -108,3 +110,14 @@ def batch_iterator(X, y=None, batch_size=64):
 
 def divide_on_feature(X, feature_i, threshold):
     return (X[X[:, feature_i] >= threshold], X[X[:, feature_i] < threshold])
+
+
+def polynomial_features(X: np.ndarray, degree: int) -> np.ndarray:
+    feats = []
+    bias = [1]
+    for X_i in X:
+        out = bias + [
+            np.prod(x) for i in range(1, degree + 1) for x in combinations_with_replacement(X_i, i)
+        ]
+        feats.append(out)
+    return np.ndarray(feats)
