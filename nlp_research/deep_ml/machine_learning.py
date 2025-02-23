@@ -93,3 +93,8 @@ def shuffle_data(
     idx = np.arange(y.shape[0])
     np.random.shuffle(idx)
     return X[idx], y[idx]
+
+
+def chunk(x: np.ndarray, batch_size: int = 1):
+    for i in range(0, x.shape[0], batch_size):
+        yield x[i : i + batch_size]
