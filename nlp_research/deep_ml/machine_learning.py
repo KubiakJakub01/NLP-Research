@@ -104,3 +104,7 @@ def batch_iterator(X, y=None, batch_size=64):
     if y is None:
         return list(chunk(X, batch_size))
     return list(zip(chunk(X, batch_size), chunk(y, batch_size), strict=False))
+
+
+def divide_on_feature(X, feature_i, threshold):
+    return (X[X[:, feature_i] >= threshold], X[X[:, feature_i] < threshold])
