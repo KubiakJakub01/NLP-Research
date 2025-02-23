@@ -98,3 +98,9 @@ def shuffle_data(
 def chunk(x: np.ndarray, batch_size: int = 1):
     for i in range(0, x.shape[0], batch_size):
         yield x[i : i + batch_size]
+
+
+def batch_iterator(X, y=None, batch_size=64):
+    if y is None:
+        return list(chunk(X, batch_size))
+    return list(zip(chunk(X, batch_size), chunk(y, batch_size), strict=False))
