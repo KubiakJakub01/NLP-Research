@@ -139,3 +139,7 @@ def to_categorical(x: np.ndarray, n_col: int | None = None) -> np.ndarray:
     n_col = n_row if n_col is None else n_col
     diagonal = np.eye(n_row, n_col)
     return diagonal[x]
+
+
+def accuracy_score(y_true, y_pred):
+    return (y_true == y_pred).sum() / y_true.shape[0]
