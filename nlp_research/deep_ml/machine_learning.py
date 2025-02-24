@@ -132,3 +132,10 @@ def get_random_subsets(X, y, n_subsets, replacements=True, seed=42):
         [np.random.choice(n, subset_size, replace=replacements) for _ in range(n_subsets)]
     )
     return [(X[idx][i].tolist(), y[idx][i].tolist()) for i in range(n_subsets)]
+
+
+def to_categorical(x: np.ndarray, n_col: int | None = None) -> np.ndarray:
+    n_row = x.max() + 1
+    n_col = n_row if n_col is None else n_col
+    diagonal = np.eye(n_row, n_col)
+    return diagonal[x]
