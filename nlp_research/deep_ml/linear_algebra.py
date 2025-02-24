@@ -74,3 +74,7 @@ def transform_basis(B: np.ndarray, C: np.ndarray) -> np.ndarray:
     P = C_inv @ B
     P = np.round(P, 4)
     return P
+
+
+def make_diagonal(x: np.ndarray) -> np.ndarray:
+    return x * np.eye(x.shape[0])
