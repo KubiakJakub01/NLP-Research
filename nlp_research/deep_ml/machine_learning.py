@@ -171,3 +171,7 @@ def calculate_correlation_matrix(X: np.ndarray, Y: np.ndarray | None = None) -> 
     correlation_matrix = (norm_X @ norm_Y.T) / X.shape[1]
 
     return correlation_matrix
+
+
+def log_softmax(x: np.ndarray) -> np.ndarray:
+    return x - x.max() - np.log(np.sum(np.exp(x - x.max())))
