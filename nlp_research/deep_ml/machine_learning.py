@@ -143,3 +143,31 @@ def to_categorical(x: np.ndarray, n_col: int | None = None) -> np.ndarray:
 
 def accuracy_score(y_true, y_pred):
     return (y_true == y_pred).sum() / y_true.shape[0]
+
+
+def calculate_correlation_matrix(X: np.ndarray, Y: np.ndarray | None = None) -> np.ndarray:
+    """
+    Compute the correlation matrix for dataset X (with optional dataset Y).
+
+    Parameters:
+        X: 2D numpy array of shape (n_samples, n_features)
+        Y: Optional 2D numpy array of shape (n_samples, n_features)
+
+    Returns:
+        correlation_matrix: 2D numpy array of shape (X_features, Y_features)
+    """
+    X = X.T
+    Y = Y.T if Y is not None else X
+
+    mean_X = np.mean(X, axis=1, keepdims=True)
+    std_X = np.std(X, axis=1, keepdims=True, ddof=0)
+
+    mean_Y = np.mean(Y, axis=1, keepdims=True)
+    std_Y = np.std(Y, axis=1, keepdims=True, ddof=0)
+
+    norm_X = (X - mean_X) / std_X
+    norm_Y = (Y - mean_Y) / std_Y
+
+    correlation_matrix = (norm_X @ norm_Y.T) / X.shape[1]
+
+    return correlation_matrix
