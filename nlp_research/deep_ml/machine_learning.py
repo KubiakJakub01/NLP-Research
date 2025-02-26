@@ -23,7 +23,7 @@ def feature_scaling(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     std = np.std(data, axis=0)
     max_ = np.max(data, axis=0)
     min_ = np.min(data, axis=0)
-    standardized_data = np.round((data - mean) / std, 4, 4)
+    standardized_data = np.round((data - mean) / std, 4)
     normalized_data = np.round(((data - min_) / (max_ - min_)), 4)
     return standardized_data, normalized_data
 
