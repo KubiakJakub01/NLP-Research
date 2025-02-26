@@ -37,7 +37,7 @@ def single_neuron_model(
     return probabilities, mse
 
 
-def train_neuron(  # pylint: disable=too-many-positional-arguments
+def train_neuron(
     features: np.ndarray,
     labels: np.ndarray,
     initial_weights: np.ndarray,
