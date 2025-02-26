@@ -97,15 +97,15 @@ def shuffle_data(
     return X[idx], y[idx]
 
 
-def chunk(x: np.ndarray, batch_size: int = 1):
+def _chunk(x: np.ndarray, batch_size: int = 1):
     for i in range(0, x.shape[0], batch_size):
         yield x[i : i + batch_size]
 
 
 def batch_iterator(X, y=None, batch_size=64):
     if y is None:
-        return list(chunk(X, batch_size))
-    return list(zip(chunk(X, batch_size), chunk(y, batch_size), strict=False))
+        return list(_chunk(X, batch_size))
+    return list(zip(_chunk(X, batch_size), _chunk(y, batch_size), strict=False))
 
 
 def divide_on_feature(X, feature_i, threshold):
