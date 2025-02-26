@@ -1,11 +1,10 @@
 import numpy as np
 import pytest
 
-from nlp_research.deep_ml.linear_algebra import (
+from nlp_research.deep_ml import (
     calculate_covariance_matrix,
-    feature_scaling,
-    linear_regression_gradient_descent,
-    linear_regression_normal_equation,
+    cross_validation_split,
+    euclidean_distance,
     matrix_dot_vector,
     solve_jacobi,
     svd_2x2_singular_values,
@@ -58,39 +57,41 @@ def test_svd_2x2_singular_values(A):
 
 
 @pytest.mark.parametrize(
-    'X, y, expected',
+    'a, b, expected',
     [
-        (np.array([[1, 1], [1, 2], [1, 3]]), np.array([1, 2, 3]), [0.0, 1.0]),
+        ([0, 0], [3, 4], 5.0),
+        ([0, 0], [1, 1], 1.4142),
     ],
 )
-def test_linear_regression_normal_equation(X, y, expected):
-    assert np.allclose(linear_regression_normal_equation(X, y), expected)
+def test_euclidean_distance(a, b, expected):
+    assert euclidean_distance(np.array(a), np.array(b)) == expected
 
 
 @pytest.mark.parametrize(
-    'X, y, alpha, iterations, expected',
-    [
-        (np.array([[1, 1], [1, 2], [1, 3]]), np.array([1, 2, 3]), 0.01, 1000, [0.1107, 0.9513]),
-    ],
-)
-def test_linear_regression_gradient_descent(X, y, alpha, iterations, expected):
-    assert np.allclose(linear_regression_gradient_descent(X, y, alpha, iterations), expected)
-
-
-@pytest.mark.parametrize(
-    'X, expected',
+    'dataset, n_folds, expected',
     [
         (
-            np.array([[1, 2], [3, 4], [5, 6]]),
-            (
-                np.array([[-1.2247, -1.2247], [0.0, 0.0], [1.2247, 1.2247]]),
-                np.array([[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]]),
-            ),
+            np.array([[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]]),
+            3,
+            [
+                [
+                    np.array([[5, 6], [1, 2], [7, 8]]),
+                    np.array([[3, 4], [9, 10]]),
+                ],
+                [
+                    np.array([[3, 4], [9, 10], [7, 8]]),
+                    np.array([[5, 6], [1, 2]]),
+                ],
+                [
+                    np.array([[3, 4], [9, 10], [5, 6], [1, 2]]),
+                    np.array([[7, 8]]),
+                ],
+            ],
         )
     ],
 )
-def test_feature_scaling(X, expected):
-    expected_standardized_data, expected_normalized_data = expected
-    standardized_data, normalized_data = feature_scaling(X)
-    assert np.allclose(standardized_data, expected_standardized_data)
-    assert np.allclose(normalized_data, expected_normalized_data)
+def test_cross_validation_split(dataset, n_folds, expected):
+    splits = cross_validation_split(dataset, n_folds)
+    for split, expected_split in zip(splits, expected, strict=False):
+        assert np.allclose(split[0], expected_split[0])
+        assert np.allclose(split[1], expected_split[1])
