@@ -26,15 +26,14 @@ def softmax(scores: list[float]) -> list[float]:
 def single_neuron_model(
     features: list[list[float]], labels: list[int], weights: list[float], bias: float
 ) -> tuple[list[float], float]:
-    probabilities = []
+    probabilities: list[float] = []
     for feature in features:
         prob = sum(f_x * weight for f_x, weight in zip(feature, weights, strict=False)) + bias
         probabilities.append(sigmoid(prob))
     mse = sum(
         (label - prob) ** 2 for label, prob in zip(labels, probabilities, strict=False)
     ) / len(labels)
-    mse = round(mse, 4)
-    return probabilities, mse
+    return probabilities, round(mse, 4)
 
 
 def train_neuron(

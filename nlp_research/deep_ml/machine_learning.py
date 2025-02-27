@@ -42,7 +42,7 @@ def k_means_clustering(
 
     for _ in range(max_iterations):
         distances = np.array(
-            [[euclidean_distance(point, centroid) for centroid in centroids] for point in points]
+            [[euclidean_distance(point, centroid) for centroid in centroids] for point in points_]
         )
         cluster_assignment = np.argmin(distances, axis=1)
         new_centroids = np.array(
@@ -120,7 +120,7 @@ def polynomial_features(X: np.ndarray, degree: int) -> np.ndarray:
             np.prod(x) for i in range(1, degree + 1) for x in combinations_with_replacement(X_i, i)
         ]
         feats.append(out)
-    return np.ndarray(feats)
+    return np.array(feats)
 
 
 def get_random_subsets(X, y, n_subsets, replacements=True, seed=42):
