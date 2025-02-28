@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 
-def sigmoid(x: np.ndarray | float) -> np.ndarray | float:
+def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
