@@ -126,3 +126,28 @@ class Value:
         self.grad = 1
         for v in reversed(topo):
             v._backward()
+
+
+def simple_conv2d(input_matrix: np.ndarray, kernel: np.ndarray, padding: int, stride: int):
+    pad_with = ((padding, padding), (padding, padding))
+    input_matrix = np.pad(input_matrix, pad_with, mode='constant', constant_values=0)
+    input_height, input_width = input_matrix.shape
+    kernel_height, kernel_width = kernel.shape
+
+    output_height = (input_height - kernel_height) // stride + 1
+    output_width = (input_width - kernel_width) // stride + 1
+
+    output_matrix = np.zeros((output_height, output_width))
+
+    for i in range(0, output_height):
+        for j in range(0, output_width):
+            i_stride = i * stride
+            j_stride = j * stride
+            output_matrix[i, j] = np.sum(
+                input_matrix[
+                    i_stride : i_stride + kernel_height, j_stride : j_stride + kernel_width
+                ]
+                * kernel
+            )
+
+    return output_matrix
