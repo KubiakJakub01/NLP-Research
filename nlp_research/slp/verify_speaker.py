@@ -4,6 +4,7 @@ from pathlib import Path
 import nemo.collections.asr as nemo_asr
 import pandas as pd
 import torch
+import torch.nn.functional as F
 
 
 def parse_args():
@@ -16,7 +17,7 @@ def parse_args():
 
 
 def compute_cosine_similarity(embedding1, embedding2):
-    return torch.nn.functional.cosine_similarity(embedding1, embedding2, dim=0).item()
+    return F.cosine_similarity(embedding1, embedding2, dim=0).item()  # pylint: disable=not-callable
 
 
 def main(input_tsv: Path, ref_col: str, compare_col: str, verify_col: str):
