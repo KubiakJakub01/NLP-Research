@@ -9,6 +9,10 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
+def leaky_relu(z: float, alpha: float = 0.01) -> float | int:
+    return z if z > 0 else z * alpha
+
+
 def sigmoid_derivative(x: np.ndarray | float) -> np.ndarray | float:
     return sigmoid(x) * (1 - sigmoid(x))
 
