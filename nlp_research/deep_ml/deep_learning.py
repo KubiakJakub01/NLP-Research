@@ -161,3 +161,57 @@ def ridge_loss(X: np.ndarray, w: np.ndarray, y_true: np.ndarray, alpha: float) -
     y_pred = X @ w
     loss = np.sum((y_pred - y_true) ** 2) / y_true.shape[0] + alpha * np.sum(w**2)
     return loss
+
+
+def compute_gradient(X, y, weights):
+    """Compute the gradient of MSE loss."""
+    m = len(y)
+    y_pred = X @ weights
+    dL_dpred = (2 / m) * (y_pred - y)
+    return X.T @ dL_dpred
+
+
+def batch_gradient_descent(X, y, weights, learning_rate, n_iterations):
+    """Batch Gradient Descent (BGD)"""
+    for _ in range(n_iterations):
+        gradient = compute_gradient(X, y, weights)
+        weights -= learning_rate * gradient
+    return weights
+
+
+def stochastic_gradient_descent(X, y, weights, learning_rate, n_iterations):
+    """Stochastic Gradient Descent (SGD)"""
+    n = len(y)
+    for _ in range(n_iterations):
+        indices = np.random.permutation(n)
+        for i in indices:
+            x_i = X[i : i + 1]
+            y_i = y[i : i + 1]
+            gradient = compute_gradient(x_i, y_i, weights)
+            weights -= learning_rate * gradient
+    return weights
+
+
+def mini_batch_gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size):
+    """Mini-Batch Gradient Descent"""
+    n = len(y)
+    for _ in range(n_iterations):
+        indices = np.random.permutation(n)
+        for i in range(0, n, batch_size):
+            batch_indices = indices[i : i + batch_size]
+            x_i = X[batch_indices]
+            y_i = y[batch_indices]
+            gradient = compute_gradient(x_i, y_i, weights)
+            weights -= learning_rate * gradient
+    return weights
+
+
+def gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size=1, method='batch'):
+    """Unified function for all gradient descent methods."""
+    if method == 'batch':
+        return batch_gradient_descent(X, y, weights, learning_rate, n_iterations)
+    if method == 'stochastic':
+        return stochastic_gradient_descent(X, y, weights, learning_rate, n_iterations)
+    if method == 'mini_batch':
+        return mini_batch_gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size)
+    raise ValueError("Invalid method. Choose 'batch', 'stochastic', or 'mini_batch'.")
