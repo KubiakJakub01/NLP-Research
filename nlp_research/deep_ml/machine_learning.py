@@ -175,3 +175,9 @@ def calculate_correlation_matrix(X: np.ndarray, Y: np.ndarray | None = None) -> 
 
 def log_softmax(x: np.ndarray) -> np.ndarray:
     return x - x.max() - np.log(np.sum(np.exp(x - x.max())))
+
+
+def precision(y_true, y_pred):
+    TP = ((y_true == 1) & (y_pred == 1)).sum()
+    FP = ((y_true == 0) & (y_pred == 1)).sum()
+    return TP / (TP + FP)
