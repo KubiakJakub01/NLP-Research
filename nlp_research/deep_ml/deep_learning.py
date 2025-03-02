@@ -151,3 +151,9 @@ def simple_conv2d(input_matrix: np.ndarray, kernel: np.ndarray, padding: int, st
             )
 
     return output_matrix
+
+
+def ridge_loss(X: np.ndarray, w: np.ndarray, y_true: np.ndarray, alpha: float) -> float:
+    y_pred = X @ w
+    loss = np.sum((y_pred - y_true) ** 2) / y_true.shape[0] + alpha * np.sum(w**2)
+    return loss
