@@ -78,3 +78,25 @@ def transform_basis(B: np.ndarray, C: np.ndarray) -> np.ndarray:
 
 def make_diagonal(x: np.ndarray) -> np.ndarray:
     return x * np.eye(x.shape[0])
+
+
+def rref(matrix):
+    row_n = matrix.shape[0]
+    for i in range(row_n):
+        print(f'Iteration: {i}')
+        row = matrix[i]
+        print(f'Row: {row}')
+        pivot = row[i]
+        print(f'Pivot: {pivot}')
+        if pivot != 0:
+            matrix[i] = row / pivot
+        for j in range(row_n):
+            if i == j:
+                continue
+            print(f'Row {j} before: {matrix[j]} {matrix[j, i]}')
+            matrix[j] -= matrix[j, i] * row
+            print(f'Row {j} after: {matrix[j]}')
+        print(f'Matrix: {matrix}')
+    print('Final matrix')
+    print(matrix)
+    return matrix
