@@ -215,3 +215,23 @@ def gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size=1, m
     if method == 'mini_batch':
         return mini_batch_gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size)
     raise ValueError("Invalid method. Choose 'batch', 'stochastic', or 'mini_batch'.")
+
+
+def adam_optimizer(
+    grad, x0, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8, num_iterations=10
+):
+    m0 = 0
+    v0 = 0
+    for t in range(1, num_iterations + 1):
+        g_t = grad(x0)
+        m_t = beta1 * m0 + (1 - beta1) * g_t
+        v_t = beta2 * v0 + (1 - beta2) * g_t**2
+        mb_t = m_t / (1 - beta1**t)
+        vb_t = v_t / (1 - beta2**t)
+        x_t = x0 - learning_rate * mb_t / (vb_t ** (1 / 2) + epsilon)
+
+        x0 = x_t.copy()
+        m0 = m_t.copy()
+        v0 = v_t.copy()
+
+    return x_t
