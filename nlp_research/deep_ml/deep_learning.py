@@ -235,3 +235,19 @@ def adam_optimizer(
         v0 = v_t.copy()
 
     return x_t
+
+
+def compute_qkv(X, W_q, W_k, W_v):
+    Q = X @ W_q
+    K = X @ W_k
+    V = X @ W_v
+    return Q, K, V
+
+
+def self_attention(Q, K, V):
+    def _softmax(x: np.ndarray) -> np.ndarray:
+        return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+
+    d_k = K.shape[1]
+    attention_output = _softmax(Q @ K.T / np.sqrt(d_k)) @ V
+    return attention_output
