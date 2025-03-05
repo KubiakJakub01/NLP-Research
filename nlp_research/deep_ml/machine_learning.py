@@ -181,3 +181,27 @@ def precision(y_true, y_pred):
     TP = ((y_true == 1) & (y_pred == 1)).sum()
     FP = ((y_true == 0) & (y_pred == 1)).sum()
     return TP / (TP + FP)
+
+
+def l1_regularization_gradient_descent(
+    X: np.array,
+    y: np.array,
+    alpha: float = 0.1,
+    learning_rate: float = 0.01,
+    max_iter: int = 1000,
+    tol: float = 1e-4,
+) -> tuple:
+    n_samples, n_features = X.shape
+
+    weights = np.zeros(n_features)
+    bias = 0
+
+    for _ in range(max_iter):
+        y_pred = X @ weights + bias
+        grad_weights = X.T @ (y_pred - y) / n_samples + alpha * np.sign(weights)
+        grad_bias = np.sum(y_pred - y) / n_samples
+        weights -= learning_rate * grad_weights
+        bias -= learning_rate * grad_bias
+        if np.sum(abs(grad_weights)) < tol:
+            break
+    return weights, bias
