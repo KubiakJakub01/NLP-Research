@@ -264,4 +264,4 @@ def rnn_forward(
     for x in input_sequence:
         hidden_state = np.tanh(Wx @ x + Wh @ initial_hidden_state + b)
         initial_hidden_state = hidden_state
-    return hidden_state
+    return np.round(hidden_state, 4)
