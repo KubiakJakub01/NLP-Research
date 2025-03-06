@@ -252,3 +252,16 @@ def self_attention(X, W_q, W_k, W_v):
     d_k = K.shape[1]
     attention_output = _softmax(Q @ K.T / np.sqrt(d_k)) @ V
     return attention_output
+
+
+def rnn_forward(
+    input_sequence: np.ndarray,
+    initial_hidden_state: np.ndarray,
+    Wx: np.ndarray,
+    Wh: np.ndarray,
+    b: np.ndarray,
+) -> np.ndarray:
+    for x in input_sequence:
+        hidden_state = np.tanh(Wx @ x + Wh @ initial_hidden_state + b)
+        initial_hidden_state = hidden_state
+    return hidden_state
