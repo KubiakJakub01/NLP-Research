@@ -265,3 +265,46 @@ def rnn_forward(
         hidden_state = np.tanh(Wx @ x + Wh @ initial_hidden_state + b)
         initial_hidden_state = hidden_state
     return np.round(hidden_state, 4)
+
+
+class LSTM:
+    def __init__(self, input_size, hidden_size):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+
+        # Initialize weights and biases
+        self.Wf = np.random.randn(hidden_size, input_size + hidden_size)
+        self.Wi = np.random.randn(hidden_size, input_size + hidden_size)
+        self.Wc = np.random.randn(hidden_size, input_size + hidden_size)
+        self.Wo = np.random.randn(hidden_size, input_size + hidden_size)
+
+        self.bf = np.zeros((hidden_size, 1))
+        self.bi = np.zeros((hidden_size, 1))
+        self.bc = np.zeros((hidden_size, 1))
+        self.bo = np.zeros((hidden_size, 1))
+
+    def forward(self, x, initial_hidden_state, initial_cell_state):
+        """
+        Processes a sequence of inputs using the LSTM cell.
+        """
+        for x_t in x:
+            hs_x = np.concatenate((initial_hidden_state, np.expand_dims(x_t, axis=-1)))
+            f_t = self.forget_gate(hs_x)
+            i_t, c_t = self.input_gate(hs_x)
+            cell_state = f_t * initial_cell_state + i_t * c_t
+            o_t = self.output_gate(hs_x)
+            hidden_state = o_t * np.tanh(cell_state)
+            initial_hidden_state = hidden_state.copy()
+            initial_cell_state = cell_state.copy()
+        return o_t, hidden_state, cell_state
+
+    def forget_gate(self, hs_x):
+        return sigmoid(self.Wf @ hs_x + self.bf)
+
+    def input_gate(self, hs_x):
+        i_t = sigmoid(self.Wi @ hs_x + self.bi)
+        c_t = np.tanh(self.Wc @ hs_x + self.bc)
+        return i_t, c_t
+
+    def output_gate(self, hs_x):
+        return sigmoid(self.Wi @ hs_x + self.bo)
