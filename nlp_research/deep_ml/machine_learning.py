@@ -184,8 +184,8 @@ def precision(y_true, y_pred):
 
 
 def l1_regularization_gradient_descent(
-    X: np.array,
-    y: np.array,
+    X: np.ndarray,
+    y: np.ndarray,
     alpha: float = 0.1,
     learning_rate: float = 0.01,
     max_iter: int = 1000,
