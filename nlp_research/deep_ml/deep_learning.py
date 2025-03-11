@@ -9,6 +9,10 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
+def leaky_relu(z: float, alpha: float = 0.01) -> float | int:
+    return z if z > 0 else z * alpha
+
+
 def sigmoid_derivative(x: np.ndarray | float) -> np.ndarray | float:
     return sigmoid(x) * (1 - sigmoid(x))
 
@@ -151,3 +155,156 @@ def simple_conv2d(input_matrix: np.ndarray, kernel: np.ndarray, padding: int, st
             )
 
     return output_matrix
+
+
+def ridge_loss(X: np.ndarray, w: np.ndarray, y_true: np.ndarray, alpha: float) -> float:
+    y_pred = X @ w
+    loss = np.sum((y_pred - y_true) ** 2) / y_true.shape[0] + alpha * np.sum(w**2)
+    return loss
+
+
+def compute_gradient(X, y, weights):
+    """Compute the gradient of MSE loss."""
+    m = len(y)
+    y_pred = X @ weights
+    dL_dpred = (2 / m) * (y_pred - y)
+    return X.T @ dL_dpred
+
+
+def batch_gradient_descent(X, y, weights, learning_rate, n_iterations):
+    """Batch Gradient Descent (BGD)"""
+    for _ in range(n_iterations):
+        gradient = compute_gradient(X, y, weights)
+        weights -= learning_rate * gradient
+    return weights
+
+
+def stochastic_gradient_descent(X, y, weights, learning_rate, n_iterations):
+    """Stochastic Gradient Descent (SGD)"""
+    n = len(y)
+    for _ in range(n_iterations):
+        indices = np.random.permutation(n)
+        for i in indices:
+            x_i = X[i : i + 1]
+            y_i = y[i : i + 1]
+            gradient = compute_gradient(x_i, y_i, weights)
+            weights -= learning_rate * gradient
+    return weights
+
+
+def mini_batch_gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size):
+    """Mini-Batch Gradient Descent"""
+    n = len(y)
+    for _ in range(n_iterations):
+        indices = np.random.permutation(n)
+        for i in range(0, n, batch_size):
+            batch_indices = indices[i : i + batch_size]
+            x_i = X[batch_indices]
+            y_i = y[batch_indices]
+            gradient = compute_gradient(x_i, y_i, weights)
+            weights -= learning_rate * gradient
+    return weights
+
+
+def gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size=1, method='batch'):
+    """Unified function for all gradient descent methods."""
+    if method == 'batch':
+        return batch_gradient_descent(X, y, weights, learning_rate, n_iterations)
+    if method == 'stochastic':
+        return stochastic_gradient_descent(X, y, weights, learning_rate, n_iterations)
+    if method == 'mini_batch':
+        return mini_batch_gradient_descent(X, y, weights, learning_rate, n_iterations, batch_size)
+    raise ValueError("Invalid method. Choose 'batch', 'stochastic', or 'mini_batch'.")
+
+
+def adam_optimizer(
+    grad, x0, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8, num_iterations=10
+):
+    m0 = 0
+    v0 = 0
+    for t in range(1, num_iterations + 1):
+        g_t = grad(x0)
+        m_t = beta1 * m0 + (1 - beta1) * g_t
+        v_t = beta2 * v0 + (1 - beta2) * g_t**2
+        mb_t = m_t / (1 - beta1**t)
+        vb_t = v_t / (1 - beta2**t)
+        x_t = x0 - learning_rate * mb_t / (vb_t ** (1 / 2) + epsilon)
+
+        x0 = x_t.copy()
+        m0 = m_t.copy()
+        v0 = v_t.copy()
+
+    return x_t
+
+
+def compute_qkv(X, W_q, W_k, W_v):
+    Q = X @ W_q
+    K = X @ W_k
+    V = X @ W_v
+    return Q, K, V
+
+
+def self_attention(X, W_q, W_k, W_v):
+    def _softmax(x: np.ndarray) -> np.ndarray:
+        return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+
+    Q, K, V = compute_qkv(X, W_q, W_k, W_v)
+    d_k = K.shape[1]
+    attention_output = _softmax(Q @ K.T / np.sqrt(d_k)) @ V
+    return attention_output
+
+
+def rnn_forward(
+    input_sequence: np.ndarray,
+    initial_hidden_state: np.ndarray,
+    Wx: np.ndarray,
+    Wh: np.ndarray,
+    b: np.ndarray,
+) -> np.ndarray:
+    for x in input_sequence:
+        hidden_state = np.tanh(Wx @ x + Wh @ initial_hidden_state + b)
+        initial_hidden_state = hidden_state
+    return np.round(hidden_state, 4)
+
+
+class LSTM:
+    def __init__(self, input_size, hidden_size):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+
+        # Initialize weights and biases
+        self.Wf = np.random.randn(hidden_size, input_size + hidden_size)
+        self.Wi = np.random.randn(hidden_size, input_size + hidden_size)
+        self.Wc = np.random.randn(hidden_size, input_size + hidden_size)
+        self.Wo = np.random.randn(hidden_size, input_size + hidden_size)
+
+        self.bf = np.zeros((hidden_size, 1))
+        self.bi = np.zeros((hidden_size, 1))
+        self.bc = np.zeros((hidden_size, 1))
+        self.bo = np.zeros((hidden_size, 1))
+
+    def forward(self, x, initial_hidden_state, initial_cell_state):
+        """
+        Processes a sequence of inputs using the LSTM cell.
+        """
+        for x_t in x:
+            hs_x = np.concatenate((initial_hidden_state, np.expand_dims(x_t, axis=-1)))
+            f_t = self.forget_gate(hs_x)
+            i_t, c_t = self.input_gate(hs_x)
+            cell_state = f_t * initial_cell_state + i_t * c_t
+            o_t = self.output_gate(hs_x)
+            hidden_state = o_t * np.tanh(cell_state)
+            initial_hidden_state = hidden_state.copy()
+            initial_cell_state = cell_state.copy()
+        return o_t, hidden_state, cell_state
+
+    def forget_gate(self, hs_x):
+        return sigmoid(self.Wf @ hs_x + self.bf)
+
+    def input_gate(self, hs_x):
+        i_t = sigmoid(self.Wi @ hs_x + self.bi)
+        c_t = np.tanh(self.Wc @ hs_x + self.bc)
+        return i_t, c_t
+
+    def output_gate(self, hs_x):
+        return sigmoid(self.Wi @ hs_x + self.bo)

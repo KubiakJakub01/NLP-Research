@@ -78,3 +78,23 @@ def transform_basis(B: np.ndarray, C: np.ndarray) -> np.ndarray:
 
 def make_diagonal(x: np.ndarray) -> np.ndarray:
     return x * np.eye(x.shape[0])
+
+
+def rref(matrix):
+    row_n = matrix.shape[0]
+    for i in range(row_n):
+        row = matrix[i]
+        pivot = row[i]
+        if pivot != 0:
+            matrix[i] = row / pivot
+        for j in range(row_n):
+            if i == j:
+                continue
+            matrix[j] -= matrix[j, i] * row
+    return matrix
+
+
+def kl_divergence_normal(mu_p, sigma_p, mu_q, sigma_q):
+    log_pq = np.log(sigma_q / sigma_p)
+    kl_divergence = log_pq + (sigma_p**2 + (mu_p - mu_q) ** 2) / (2 * sigma_q**2) - 0.5
+    return kl_divergence
