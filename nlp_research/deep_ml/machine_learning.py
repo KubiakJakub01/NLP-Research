@@ -183,6 +183,15 @@ def precision(y_true, y_pred):
     return TP / (TP + FP)
 
 
+def recall(y_true, y_pred):
+    TP = ((y_true == 1) & (y_pred == 1)).sum()
+    FN = ((y_true == 1) & (y_pred == 0)).sum()
+    denominator = TP + FN
+    if denominator == 0:
+        return 0.0
+    return round(TP / denominator, 3)
+
+
 def l1_regularization_gradient_descent(
     X: np.ndarray,
     y: np.ndarray,
