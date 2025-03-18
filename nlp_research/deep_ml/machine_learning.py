@@ -180,7 +180,7 @@ def log_softmax(x: np.ndarray) -> np.ndarray:
 def precision(y_true, y_pred):
     TP = ((y_true == 1) & (y_pred == 1)).sum()
     FP = ((y_true == 0) & (y_pred == 1)).sum()
-    return TP / (TP + FP)
+    return round(TP / (TP + FP), 3)
 
 
 def recall(y_true, y_pred):
@@ -190,6 +190,25 @@ def recall(y_true, y_pred):
     if denominator == 0:
         return 0.0
     return round(TP / denominator, 3)
+
+
+def f_score(y_true, y_pred, beta):
+    """
+    Calculate F-Score for a binary classification task.
+
+    :param y_true: Numpy array of true labels
+    :param y_pred: Numpy array of predicted labels
+    :param beta: The weight of precision in the harmonic mean
+    :return: F-Score rounded to three decimal places
+    """
+    precision_value = precision(y_true, y_pred)
+    recall_value = recall(y_true, y_pred)
+    f_score_value = (
+        (1 + beta**2)
+        * (precision_value * recall_value)
+        / (beta**2 * precision_value + recall_value)
+    )
+    return round(f_score_value, 3)
 
 
 def l1_regularization_gradient_descent(
