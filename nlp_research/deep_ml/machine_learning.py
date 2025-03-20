@@ -233,3 +233,119 @@ def l1_regularization_gradient_descent(
         if np.sum(abs(grad_weights)) < tol:
             break
     return weights, bias
+
+
+def adaboost_fit(X: np.ndarray, y: np.ndarray, n_clf: int) -> list:
+    """
+    Fit AdaBoost classifier on the training data.
+
+    Parameters:
+        X: Training data of shape (n_samples, n_features)
+        y: Target labels of shape (n_samples,)
+        n_clf: Number of weak classifiers to use
+
+    Returns:
+        List of tuples where each tuple contains:
+        - feature_idx: Index of the feature used for the weak classifier
+        - threshold: Threshold used for classification
+        - polarity: Direction of the inequality sign (-1 or 1)
+        - alpha: Weight assigned to this classifier
+    """
+    n_samples, n_features = X.shape
+
+    # Initialize weights to 1/N
+    w = np.full(n_samples, (1 / n_samples))
+
+    # Initialize classifier list
+    classifiers = []
+
+    # Iterate through classifiers
+    for _ in range(n_clf):
+        # Initialize error and classifier parameters
+        min_error = float('inf')
+        best_feature_idx = 0
+        best_threshold = 0
+        best_polarity = 1
+
+        # Loop through all features
+        for feature_idx in range(n_features):
+            # Get all values of the current feature
+            feature_values = X[:, feature_idx]
+
+            # Find unique values to test as thresholds
+            thresholds = np.unique(feature_values)
+
+            # Loop through all possible thresholds
+            for threshold in thresholds:
+                # Try both polarities (> and <)
+                for polarity in [-1, 1]:
+                    # Predict with current setup
+                    predictions = np.ones(n_samples)
+
+                    if polarity == 1:
+                        predictions[feature_values < threshold] = -1
+                    else:
+                        predictions[feature_values >= threshold] = -1
+
+                    # Calculate weighted error
+                    misclassified = w[y != predictions]
+                    error = np.sum(misclassified)
+
+                    # If we have a better error, save the classifier
+                    if error < min_error:
+                        min_error = error
+                        best_feature_idx = feature_idx
+                        best_threshold = threshold
+                        best_polarity = polarity
+
+        # Calculate alpha (weight of this classifier)
+        eps = 1e-10  # Small value to avoid division by zero
+        alpha = 0.5 * np.log((1.0 - min_error + eps) / (min_error + eps))
+
+        # Make predictions using the best classifier found
+        predictions = np.ones(n_samples)
+        if best_polarity == 1:
+            predictions[X[:, best_feature_idx] < best_threshold] = -1
+        else:
+            predictions[X[:, best_feature_idx] >= best_threshold] = -1
+
+        # Update sample weights
+        w *= np.exp(-alpha * y * predictions)
+        w /= np.sum(w)  # Normalize weights
+
+        # Save classifier
+        classifiers.append((best_feature_idx, best_threshold, best_polarity, alpha))
+
+    return classifiers
+
+
+def adaboost_predict(X: np.ndarray, classifiers: list) -> np.ndarray:
+    """
+    Make predictions using fitted AdaBoost classifier.
+
+    Parameters:
+        X: Data to make predictions on, shape (n_samples, n_features)
+        classifiers: List of tuples with classifier parameters from adaboost_fit
+
+    Returns:
+        Predicted class labels (-1 or 1)
+    """
+    n_samples = X.shape[0]
+    y_pred = np.zeros(n_samples)
+
+    # Sum predictions from all classifiers, weighted by their alpha
+    for clf in classifiers:
+        feature_idx, threshold, polarity, alpha = clf
+
+        # Make predictions using this classifier
+        predictions = np.ones(n_samples)
+        if polarity == 1:
+            predictions[X[:, feature_idx] < threshold] = -1
+        else:
+            predictions[X[:, feature_idx] >= threshold] = -1
+
+        # Weight predictions by alpha and add to final prediction
+        y_pred += alpha * predictions
+
+    # Return sign of prediction
+    return np.sign(y_pred)

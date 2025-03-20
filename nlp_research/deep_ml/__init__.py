@@ -18,6 +18,8 @@ from .linear_algebra import (
 )
 from .machine_learning import (
     accuracy_score,
+    adaboost_fit,
+    adaboost_predict,
     batch_iterator,
     calculate_correlation_matrix,
     cross_validation_split,
@@ -36,6 +38,8 @@ from .machine_learning import (
 )
 
 __all__ = [
+    'adaboost_fit',
+    'adaboost_predict',
     'accuracy_score',
     'batch_iterator',
     'calculate_correlation_matrix',
