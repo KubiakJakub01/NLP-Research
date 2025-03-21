@@ -1,3 +1,4 @@
+from collections import defaultdict
 from itertools import combinations_with_replacement
 
 import numpy as np
@@ -349,3 +350,20 @@ def adaboost_predict(X: np.ndarray, classifiers: list) -> np.ndarray:
 
     # Return sign of prediction
     return np.sign(y_pred)
+
+
+def gini_impurity(y):
+    """
+    Calculate Gini Impurity for a list of class labels.
+
+    :param y: List of class labels
+    :return: Gini Impurity rounded to three decimal places
+    """
+    N = len(y)
+    d = defaultdict(int)
+    for y_i in y:
+        d[y_i] += 1
+
+    val = 1 - sum((v / N) ** 2 for v in d.values())
+
+    return round(val, 3)
