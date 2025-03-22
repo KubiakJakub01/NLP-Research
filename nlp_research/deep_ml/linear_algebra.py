@@ -106,3 +106,15 @@ def gauss_seidel(A, b, n, x_ini=None):
         for i in range(len(A)):
             x[i] = (1 / A[i, i]) * (b[i] - sum(A[i, j] * x[j] for j in range(len(A)) if j != i))
     return x.round(4).tolist()
+
+
+def compressed_row_sparse_matrix(dense_matrix: np.ndarray) -> tuple:
+    """
+    Convert a dense matrix to its Compressed Row Sparse (CSR) representation.
+
+    :param dense_matrix: 2D list representing a dense matrix
+    :return: A tuple containing (values array, column indices array, row pointer array)
+    """
+    row_idx, col_idx = dense_matrix.nonzero()
+    vals = dense_matrix[dense_matrix != 0]
+    return vals.tolist(), col_idx.tolist(), row_idx.tolist()
