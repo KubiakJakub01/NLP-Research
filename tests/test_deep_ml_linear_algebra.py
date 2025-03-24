@@ -5,6 +5,8 @@ from nlp_research.deep_ml import (
     calculate_covariance_matrix,
     cross_validation_split,
     euclidean_distance,
+    f_score,
+    gini_impurity,
     matrix_dot_vector,
     solve_jacobi,
     svd_2x2_singular_values,
@@ -95,3 +97,25 @@ def test_cross_validation_split(dataset, n_folds, expected):
     for split, expected_split in zip(splits, expected, strict=False):
         assert np.allclose(split[0], expected_split[0])
         assert np.allclose(split[1], expected_split[1])
+
+
+@pytest.mark.parametrize(
+    'y_true, y_pred, beta, expected',
+    [
+        (np.array([1, 0, 1, 1, 0, 1]), np.array([1, 0, 1, 0, 0, 1]), 1, 0.857),
+        (np.array([1, 0, 1, 1, 0, 0]), np.array([1, 0, 0, 0, 0, 1]), 1, 0.4),
+    ],
+)
+def test_f_score(y_true, y_pred, beta, expected):
+    assert f_score(y_true, y_pred, beta) == expected
+
+
+@pytest.mark.parametrize(
+    'y, expected',
+    [
+        ([0, 0, 0, 0, 1, 1, 1, 1], 0.5),
+        ([0, 0, 0, 0, 0, 1], 0.278),
+    ],
+)
+def test_gini_impurity(y, expected):
+    assert gini_impurity(y) == expected

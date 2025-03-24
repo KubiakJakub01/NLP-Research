@@ -18,13 +18,17 @@ from .linear_algebra import (
 )
 from .machine_learning import (
     accuracy_score,
+    adaboost_fit,
+    adaboost_predict,
     batch_iterator,
     calculate_correlation_matrix,
     cross_validation_split,
     divide_on_feature,
     euclidean_distance,
+    f_score,
     feature_scaling,
     get_random_subsets,
+    gini_impurity,
     k_means_clustering,
     linear_regression_gradient_descent,
     linear_regression_normal_equation,
@@ -35,6 +39,8 @@ from .machine_learning import (
 )
 
 __all__ = [
+    'adaboost_fit',
+    'adaboost_predict',
     'accuracy_score',
     'batch_iterator',
     'calculate_correlation_matrix',
@@ -43,7 +49,9 @@ __all__ = [
     'divide_on_feature',
     'euclidean_distance',
     'feature_scaling',
+    'f_score',
     'get_random_subsets',
+    'gini_impurity',
     'k_means_clustering',
     'linear_regression_gradient_descent',
     'linear_regression_normal_equation',
