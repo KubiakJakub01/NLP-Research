@@ -367,3 +367,16 @@ def gini_impurity(y):
     val = 1 - sum((v / N) ** 2 for v in d.values())
 
     return round(val, 3)
+
+
+def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Calculate Root Mean Squared Error (RMSE) between true and predicted values.
+
+    :param y_true: Numpy array of true values"
+    :param y_pred: Numpy array of predicted values
+
+    :return: RMSE rounded to three decimal places
+    """
+    rmse_res = np.mean((y_true - y_pred) ** 2) ** (1 / 2)
+    return round(rmse_res, 3)
