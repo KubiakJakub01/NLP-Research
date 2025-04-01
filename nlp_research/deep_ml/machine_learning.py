@@ -380,3 +380,19 @@ def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     rmse_res = np.mean((y_true - y_pred) ** 2) ** (1 / 2)
     return round(rmse_res, 3)
+
+
+def jaccard_index(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Calculate Jaccard Index (Intersection over Union) between true and predicted values.
+
+    :param y_true: Numpy array of true values
+    :param y_pred: Numpy array of predicted values
+
+    :return: Jaccard Index rounded to three decimal places
+    """
+    A = (y_true == 1).sum()
+    B = (y_pred == 1).sum()
+    inter = ((y_true == 1) & (y_pred == 1)).sum()
+    result = inter / (A + B - inter)
+    return round(result, 3)
