@@ -373,7 +373,7 @@ def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     Calculate Root Mean Squared Error (RMSE) between true and predicted values.
 
-    :param y_true: Numpy array of true values"
+    :param y_true: Numpy array of true values
     :param y_pred: Numpy array of predicted values
 
     :return: RMSE rounded to three decimal places
