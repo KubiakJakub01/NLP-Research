@@ -394,5 +394,8 @@ def jaccard_index(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     A = (y_true == 1).sum()
     B = (y_pred == 1).sum()
     inter = ((y_true == 1) & (y_pred == 1)).sum()
-    result = inter / (A + B - inter)
+    denominator = A + B - inter
+    if denominator == 0:
+        return 0.0
+    result = inter / denominator
     return round(result, 3)
