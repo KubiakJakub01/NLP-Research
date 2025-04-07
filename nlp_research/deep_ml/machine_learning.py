@@ -399,3 +399,22 @@ def jaccard_index(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         return 0.0
     result = inter / denominator
     return round(result, 3)
+
+
+def dice_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Calculate Dice Score between true and predicted values.
+
+    :param y_true: Numpy array of true values
+    :param y_pred: Numpy array of predicted values
+
+    :return: Dice Score rounded to three decimal places
+    """
+    tp = ((y_true == 1) & (y_pred == 1)).sum()
+    fp = ((y_true == 0) & (y_pred == 1)).sum()
+    fn = ((y_true == 1) & (y_pred == 0)).sum()
+    divisor = 2 * tp + fp + fn
+    if divisor == 0:
+        return 0.0
+    res = 2 * tp / divisor
+    return round(res, 3)
