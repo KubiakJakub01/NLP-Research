@@ -8,6 +8,7 @@ from nlp_research.deep_ml import (
     batch_iterator,
     calculate_correlation_matrix,
     cross_validation_split,
+    dice_score,
     divide_on_feature,
     euclidean_distance,
     f_score,
@@ -375,6 +376,19 @@ def test_calculate_correlation_matrix(X, Y, expected_corr_diag):
     # If Y is provided, we might not be checking the diagonal directly unless Y=X
     # Check values are within [-1, 1]
     assert np.all(corr_matrix >= -1.0001) and np.all(corr_matrix <= 1.0001)
+
+
+@pytest.mark.parametrize(
+    'y_true, y_pred, expected_dice_score',
+    [
+        (np.array([1, 1, 0, 0]), np.array([1, 1, 0, 0]), 1.0),
+        (np.array([1, 0, 1, 0]), np.array([1, 1, 0, 0]), 0.5),
+        (np.array([1, 1, 1, 1]), np.array([0, 0, 0, 0]), 0.0),
+        (np.array([0, 0, 0]), np.array([1, 1, 1]), 0.0),
+    ],
+)
+def test_dice_score(y_true, y_pred, expected_dice_score):
+    assert np.isclose(dice_score(y_true, y_pred), expected_dice_score)
 
 
 @pytest.mark.parametrize(
