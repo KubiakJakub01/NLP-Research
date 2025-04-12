@@ -418,3 +418,45 @@ def dice_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         return 0.0
     res = 2 * tp / divisor
     return round(res, 3)
+
+
+def _generate_bipolar_hv(dim: int, seed: int) -> np.ndarray:
+    """Generates a random bipolar hypervector using a specific seed."""
+    rng = np.random.default_rng(seed)
+    return rng.choice([1, -1], size=dim)
+
+
+def create_row_hv(row: dict, dim: int, random_seeds: dict) -> np.ndarray:
+    """
+    Generates a composite hypervector for a dataset row using HDC.
+
+    Each feature is represented by binding hypervectors for the feature name
+    and its value. The value hypervector uses a seed derived from the feature's
+    seed in random_seeds and the value itself. All feature hypervectors are
+    then bundled.
+
+    Args:
+        row: Dictionary representing a dataset row {feature_name: value}.
+        dim: Dimensionality of the hypervectors.
+        random_seeds: Dictionary mapping feature names to integer seeds for value HVs.
+
+    Returns:
+        A numpy array representing the composite bipolar hypervector (+1/-1) for the row.
+    """
+    feature_hvs = []
+    for feature_name, feature_value in row.items():
+        if feature_name not in random_seeds:
+            raise ValueError(f'Seed not found for feature: {feature_name} in random_seeds')
+
+        name_seed = hash(feature_name)
+        hv_name = _generate_bipolar_hv(dim, name_seed)
+        value_hash = hash(feature_value)
+        value_seed = random_seeds[feature_name] + value_hash
+        hv_value = _generate_bipolar_hv(dim, value_seed)
+        bound_hv = hv_name * hv_value
+        feature_hvs.append(bound_hv)
+
+    composite_hv = np.zeros(dim) if not feature_hvs else np.sum(feature_hvs, axis=0)
+    final_hv = np.where(composite_hv >= 0, 1, -1).astype(int)
+
+    return final_hv

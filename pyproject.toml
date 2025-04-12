@@ -70,7 +70,7 @@ disable = ["missing-docstring",
             "too-many-positional-arguments",
             "duplicate-code"]
 fail-under = 10.0
-generated-members=["numpy.*","torch.*"]
+generated-members=["numpy.*","torch.*", "numpy.random.*"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
