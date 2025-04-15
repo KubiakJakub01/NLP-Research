@@ -146,6 +146,27 @@ def accuracy_score(y_true, y_pred):
     return (y_true == y_pred).sum() / y_true.shape[0]
 
 
+def confusion_matrix(data: list[list[int]]) -> list[list[int]]:
+    """
+    Create a confusion matrix from a list of lists.
+
+    :param data: List of lists where each inner list contains the true and predicted labels.
+                 Example: [[true_label1, pred_label1], [true_label2, pred_label2], ...]
+    :return: Confusion matrix as a list of lists.
+    """
+    TP, FP, TN, FN = 0, 0, 0, 0
+    for y_true, y_pred in data:
+        if y_true == 0 and y_pred == 0:
+            TN += 1
+        elif y_true == 0 and y_pred == 1:
+            FN += 1
+        elif y_true == 1 and y_pred == 1:
+            TP += 1
+        else:
+            FP += 1
+    return [[TP, FP], [FN, TN]]
+
+
 def calculate_correlation_matrix(X: np.ndarray, Y: np.ndarray | None = None) -> np.ndarray:
     """
     Compute the correlation matrix for dataset X (with optional dataset Y).
