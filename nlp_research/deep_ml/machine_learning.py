@@ -146,6 +146,27 @@ def accuracy_score(y_true, y_pred):
     return (y_true == y_pred).sum() / y_true.shape[0]
 
 
+def confusion_matrix(data: list[list[int]]) -> list[list[int]]:
+    """
+    Create a confusion matrix from a list of lists.
+
+    :param data: List of lists where each inner list contains the true and predicted labels.
+                 Example: [[true_label1, pred_label1], [true_label2, pred_label2], ...]
+    :return: Confusion matrix as a list of lists.
+    """
+    TP, FP, TN, FN = 0, 0, 0, 0
+    for y_true, y_pred in data:
+        if y_true == 0 and y_pred == 0:
+            TN += 1
+        elif y_true == 0 and y_pred == 1:
+            FN += 1
+        elif y_true == 1 and y_pred == 1:
+            TP += 1
+        else:
+            FP += 1
+    return [[TP, FP], [FN, TN]]
+
+
 def calculate_correlation_matrix(X: np.ndarray, Y: np.ndarray | None = None) -> np.ndarray:
     """
     Compute the correlation matrix for dataset X (with optional dataset Y).
@@ -399,3 +420,64 @@ def jaccard_index(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         return 0.0
     result = inter / denominator
     return round(result, 3)
+
+
+def dice_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Calculate Dice Score between true and predicted values.
+
+    :param y_true: Numpy array of true values
+    :param y_pred: Numpy array of predicted values
+
+    :return: Dice Score rounded to three decimal places
+    """
+    tp = ((y_true == 1) & (y_pred == 1)).sum()
+    fp = ((y_true == 0) & (y_pred == 1)).sum()
+    fn = ((y_true == 1) & (y_pred == 0)).sum()
+    divisor = 2 * tp + fp + fn
+    if divisor == 0:
+        return 0.0
+    res = 2 * tp / divisor
+    return round(res, 3)
+
+
+def _generate_bipolar_hv(dim: int, seed: int) -> np.ndarray:
+    """Generates a random bipolar hypervector using a specific seed."""
+    rng = np.random.default_rng(seed)
+    return rng.choice([1, -1], size=dim)
+
+
+def create_row_hv(row: dict, dim: int, random_seeds: dict) -> np.ndarray:
+    """
+    Generates a composite hypervector for a dataset row using HDC.
+
+    Each feature is represented by binding hypervectors for the feature name
+    and its value. The value hypervector uses a seed derived from the feature's
+    seed in random_seeds and the value itself. All feature hypervectors are
+    then bundled.
+
+    Args:
+        row: Dictionary representing a dataset row {feature_name: value}.
+        dim: Dimensionality of the hypervectors.
+        random_seeds: Dictionary mapping feature names to integer seeds for value HVs.
+
+    Returns:
+        A numpy array representing the composite bipolar hypervector (+1/-1) for the row.
+    """
+    feature_hvs = []
+    for feature_name, feature_value in row.items():
+        if feature_name not in random_seeds:
+            raise ValueError(f'Seed not found for feature: {feature_name} in random_seeds')
+
+        name_seed = hash(feature_name)
+        hv_name = _generate_bipolar_hv(dim, name_seed)
+        value_hash = hash(feature_value)
+        value_seed = random_seeds[feature_name] + value_hash
+        hv_value = _generate_bipolar_hv(dim, value_seed)
+        bound_hv = hv_name * hv_value
+        feature_hvs.append(bound_hv)
+
+    composite_hv = np.zeros(dim) if not feature_hvs else np.sum(feature_hvs, axis=0)
+    final_hv = np.where(composite_hv >= 0, 1, -1).astype(int)
+
+    return final_hv
