@@ -24,6 +24,7 @@ from nlp_research.deep_ml import (
     pca,
     polynomial_features,
     precision,
+    r_squared,
     recall,
     rmse,
     shuffle_data,
@@ -579,3 +580,15 @@ def test_jaccard_index(y_true, y_pred, expected_jaccard):
         assert expected_jaccard == 0.0
     else:
         assert np.isclose(jaccard_index(y_true, y_pred), expected_jaccard, atol=1e-3)
+
+
+@pytest.mark.parametrize(
+    'y_true, y_pred, expected_r_squared',
+    [
+        (np.array([1, 2, 3]), np.array([1, 2, 3]), 1.0),
+        (np.array([1, 2, 3, 4, 5]), np.array([1.1, 2.1, 2.9, 4.2, 4.8]), 0.989),
+        (np.array([1, 2, 3, 4, 5]), np.array([5, 4, 3, 2, 1]), -3),
+    ],
+)
+def test_r_squared(y_true, y_pred, expected_r_squared):
+    assert np.isclose(r_squared(y_true, y_pred), expected_r_squared, atol=1e-3)
