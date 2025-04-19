@@ -481,3 +481,18 @@ def create_row_hv(row: dict, dim: int, random_seeds: dict) -> np.ndarray:
     final_hv = np.where(composite_hv >= 0, 1, -1).astype(int)
 
     return final_hv
+
+
+def r_squared(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Calculate R-squared (coefficient of determination) between true and predicted values.
+
+    :param y_true: Numpy array of true values
+    :param y_pred: Numpy array of predicted values
+
+    :return: R-squared rounded to three decimal places
+    """
+    ssr = np.sum((y_true - y_pred) ** 2)
+    mean = np.mean(y_true)
+    sst = np.sum((y_true - mean) ** 2)
+    return round(1 - (ssr / sst), 3)
