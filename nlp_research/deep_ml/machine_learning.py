@@ -483,6 +483,19 @@ def create_row_hv(row: dict, dim: int, random_seeds: dict) -> np.ndarray:
     return final_hv
 
 
+def cosine_similarity(v1, v2):
+    """
+    Calculate cosine similarity between two vectors.
+
+    :param v1: Numpy array of vector 1
+    :param v2: Numpy array of vector 2
+
+    :return: Cosine similarity rounded to three decimal places
+    """
+    simm = np.sum(v1 * v2) / (np.sum(v1**2) ** (1 / 2) * np.sum(v2**2) ** (1 / 2))
+    return round(simm, 3)
+
+
 def r_squared(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     Calculate R-squared (coefficient of determination) between true and predicted values.
