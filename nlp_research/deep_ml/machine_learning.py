@@ -483,6 +483,19 @@ def create_row_hv(row: dict, dim: int, random_seeds: dict) -> np.ndarray:
     return final_hv
 
 
+def cosine_similarity(v1, v2):
+    """
+    Calculate cosine similarity between two vectors.
+
+    :param v1: Numpy array of vector 1
+    :param v2: Numpy array of vector 2
+
+    :return: Cosine similarity rounded to three decimal places
+    """
+    simm = np.sum(v1 * v2) / (np.sum(v1**2) ** (1 / 2) * np.sum(v2**2) ** (1 / 2))
+    return round(simm, 3)
+
+
 def r_squared(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     Calculate R-squared (coefficient of determination) between true and predicted values.
@@ -496,3 +509,24 @@ def r_squared(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     mean = np.mean(y_true)
     sst = np.sum((y_true - mean) ** 2)
     return round(1 - (ssr / sst), 3)
+
+
+def performance_metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple:
+    TP = ((actual == 1) & (predicted == 1)).sum()
+    TN = ((actual == 0) & (predicted == 0)).sum()
+    FP = ((actual == 0) & (predicted == 1)).sum()
+    FN = ((actual == 1) & (predicted == 0)).sum()
+    _confusion_matrix = ((TP, FN), (FP, TN))
+    _accuracy = (TP + TN) / (TP + TN + FP + FN)
+    _precision = TP / (TP + FP)
+    _negativePredictive = TN / (TN + FN)
+    _recall = TP / (TP + FN)
+    _specificity = TN / (TN + FP)
+    _f1 = 2 * _precision * _recall / (_precision + _recall)
+    return (
+        _confusion_matrix,
+        round(_accuracy, 3),
+        round(_f1, 3),
+        round(_specificity, 3),
+        round(_negativePredictive, 3),
+    )

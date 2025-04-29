@@ -7,6 +7,7 @@ from nlp_research.deep_ml import (
     adaboost_predict,
     batch_iterator,
     calculate_correlation_matrix,
+    cosine_similarity,
     cross_validation_split,
     dice_score,
     divide_on_feature,
@@ -580,6 +581,19 @@ def test_jaccard_index(y_true, y_pred, expected_jaccard):
         assert expected_jaccard == 0.0
     else:
         assert np.isclose(jaccard_index(y_true, y_pred), expected_jaccard, atol=1e-3)
+
+
+@pytest.mark.parametrize(
+    'v1, v2, expected_cosine_similarity',
+    [
+        (np.array([1, 2, 3]), np.array([4, 5, 6]), 0.974),
+        (np.array([1, 2, 3]), np.array([1, 2, 3]), 1.0),
+        (np.array([1, 2, 3]), np.array([4, 5, 6]), 0.974),
+        (np.array([1, 2, 3]), np.array([1, 2, 3]), 1.0),
+    ],
+)
+def test_cosine_similarity(v1, v2, expected_cosine_similarity):
+    assert np.isclose(cosine_similarity(v1, v2), expected_cosine_similarity, atol=1e-3)
 
 
 @pytest.mark.parametrize(
