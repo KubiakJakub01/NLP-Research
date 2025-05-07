@@ -530,3 +530,35 @@ def performance_metrics(actual: np.ndarray, predicted: np.ndarray) -> tuple:
         round(_specificity, 3),
         round(_negativePredictive, 3),
     )
+
+
+def gaussian_elimination(A, b):
+    """
+    Solves the system Ax = b using Gaussian Elimination with partial pivoting.
+
+    :param A: Coefficient matrix
+    :param b: Right-hand side vector
+    :return: Solution vector x
+    """
+    n = len(A)
+    x = np.zeros(n)
+    for i in range(n):
+        # Partial pivoting
+        max_row = np.argmax(np.abs(A[i:n, i])) + i
+        A[[i, max_row]] = A[[max_row, i]]
+        b[[i, max_row]] = b[[max_row, i]]
+
+        if A[i, i] == 0:
+            raise ValueError('Matrix is singular or close to singular')
+
+        # Elimination
+        for j in range(i + 1, n):
+            factor = A[j, i] / A[i, i]
+            A[j, i:] -= factor * A[i, i:]
+            b[j] -= factor * b[i]
+
+    # Back substitution
+    for i in range(n - 1, -1, -1):
+        x[i] = (b[i] - np.sum(A[i, i + 1 :] * x[i + 1 :])) / A[i, i]
+
+    return x

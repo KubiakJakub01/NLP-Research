@@ -14,6 +14,7 @@ from nlp_research.deep_ml import (
     euclidean_distance,
     f_score,
     feature_scaling,
+    gaussian_elimination,
     get_random_subsets,
     gini_impurity,
     jaccard_index,
@@ -606,3 +607,22 @@ def test_cosine_similarity(v1, v2, expected_cosine_similarity):
 )
 def test_r_squared(y_true, y_pred, expected_r_squared):
     assert np.isclose(r_squared(y_true, y_pred), expected_r_squared, atol=1e-3)
+
+
+@pytest.mark.parametrize(
+    'A, b, expected_x',
+    [
+        (
+            np.array([[2, 8, 4], [2, 5, 1], [4, 10, -1]], dtype=float),
+            np.array([2, 5, 1], dtype=float),
+            np.array([11, -4, 3]),
+        ),
+        (
+            np.array([[2, 1, -1], [-3, -1, 2], [-2, 1, 2]], dtype=float),
+            np.array([8, -11, -3], dtype=float),
+            np.array([2, 3, -1]),
+        ),
+    ],
+)
+def test_gaussian_elimination(A, b, expected_x):
+    assert np.allclose(gaussian_elimination(A, b), expected_x, atol=1e-3)
