@@ -28,7 +28,7 @@ def compute_tf_idf(corpus, query):
     return tfidf
 
 
-def OSA(source: str, target: str) -> int:
+def osa(source: str, target: str) -> int:
     """
     Compute the Optimal String Alignment (OSA) distance between two strings.
 
