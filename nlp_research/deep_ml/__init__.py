@@ -49,6 +49,7 @@ from .machine_learning import (
     shuffle_data,
     to_categorical,
 )
+from .nlp import osa
 
 __all__ = [
     'adaboost_fit',
@@ -71,6 +72,7 @@ __all__ = [
     'jaccard_index',
     'k_means_clustering',
     'log_softmax',
+    'osa',
     'linear_regression_gradient_descent',
     'linear_regression_normal_equation',
     'l1_regularization_gradient_descent',
