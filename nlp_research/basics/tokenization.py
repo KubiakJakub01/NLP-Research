@@ -2,6 +2,7 @@ import re
 from collections import defaultdict
 
 import numpy as np
+import pandas as pd
 
 
 class BagOfWordsVectorizer:
@@ -138,3 +139,37 @@ class TfidfVectorizer:
         """Convenience method to fit and then transform."""
         self.fit(corpus)
         return self.transform(corpus)
+
+
+def main():
+    # Sample corpus
+    corpus = [
+        'The cat sat on the mat.',
+        'The dog ate my homework.',
+        'The cat and the dog are friends.',
+        'Is it a cat or a dog?',
+    ]
+
+    # --- Using Bag-of-Words ---
+    print('--- Bag-of-Words ---')
+    bow_vec = BagOfWordsVectorizer()
+    bow_matrix = bow_vec.fit_transform(corpus)
+
+    # Display the result in a readable format
+    bow_df = pd.DataFrame(bow_matrix, columns=bow_vec.vocabulary_)
+    print('Vocabulary:', bow_vec.vocabulary_)
+    print('BoW Matrix:\n', bow_df)
+
+    # --- Using TF-IDF ---
+    print('\n\n--- TF-IDF ---')
+    tfidf_vec = TfidfVectorizer()
+    tfidf_matrix = tfidf_vec.fit_transform(corpus)
+
+    # Display the result in a readable format
+    tfidf_df = pd.DataFrame(tfidf_matrix, columns=tfidf_vec.vocabulary_)
+    print('Vocabulary:', tfidf_vec.vocabulary_)
+    print('TF-IDF Matrix:\n', tfidf_df.round(2))  # Round for better readability
+
+
+if __name__ == '__main__':
+    main()
