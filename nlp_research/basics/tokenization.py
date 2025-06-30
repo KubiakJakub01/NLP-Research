@@ -72,3 +72,69 @@ class BagOfWordsVectorizer:
         """Convenience method to fit and then transform."""
         self.fit(corpus)
         return self.transform(corpus)
+
+
+class TfidfVectorizer:
+    def __init__(self):
+        self._bow_vectorizer = BagOfWordsVectorizer()
+        self.idf_ = None
+        self.vocabulary_ = None
+        self.word_to_index_ = None
+
+    def fit(self, corpus):
+        """
+        Builds the vocabulary and calculates IDF values.
+
+        Args:
+            corpus (list of str): A list of text documents.
+        """
+        # Use our BoW vectorizer to get the vocabulary and term counts
+        term_counts_matrix = self._bow_vectorizer.fit_transform(corpus)
+
+        # Inherit the vocabulary from the BoW instance
+        self.vocabulary_ = self._bow_vectorizer.vocabulary_
+        self.word_to_index_ = self._bow_vectorizer.word_to_index_
+
+        n_documents = len(corpus)
+
+        # Calculate document frequency (how many docs contain each word)
+        # A non-zero count means the word is in the document
+        doc_freq = np.sum(term_counts_matrix > 0, axis=0)
+
+        # Calculate IDF
+        # Using log(N / (df + 1)) + 1 for stability and smoothing
+        self.idf_ = np.log((n_documents) / (doc_freq + 1)) + 1
+        return self
+
+    def transform(self, corpus):
+        """
+        Transforms a corpus of documents into a TF-IDF matrix.
+
+        Args:
+            corpus (list of str): A list of text documents.
+        """
+        if self.vocabulary_ is None:
+            raise RuntimeError('Vectorizer has not been fitted yet. Call fit() first.')
+
+        # Get the raw term counts using the fitted BoW vectorizer
+        term_counts_matrix = self._bow_vectorizer.transform(corpus)
+
+        # Calculate Term Frequency (TF)
+        # Sum of counts for each document (row)
+        doc_term_counts = term_counts_matrix.sum(axis=1)
+
+        # To avoid division by zero for empty documents
+        doc_term_counts[doc_term_counts == 0] = 1
+
+        # Divide each element by the total count in its row
+        tf_matrix = term_counts_matrix / doc_term_counts[:, np.newaxis]
+
+        # Calculate TF-IDF
+        tfidf_matrix = tf_matrix * self.idf_
+
+        return tfidf_matrix
+
+    def fit_transform(self, corpus):
+        """Convenience method to fit and then transform."""
+        self.fit(corpus)
+        return self.transform(corpus)
