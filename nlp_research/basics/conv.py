@@ -88,6 +88,9 @@ class Conv2D:  # pylint: disable=too-few-public-methods
 
         return output_tensor
 
+    def backward(self, output_tensor, learning_rate):
+        pass
+
 
 def main():
     # 1. Create a sample input image (e.g., a 10x10 grayscale image)
