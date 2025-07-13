@@ -66,6 +66,84 @@ class LSTM:
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
+    def backward(self, output_tensor, learning_rate):
+        """
+        Backward pass for the LSTM cell.
+        Args:
+            output_tensor (np.ndarray): The gradient of the loss with respect to the output (dL/dh).
+            learning_rate (float): Learning rate for parameter updates.
+        Returns:
+            None
+        """
+        # Initialize gradients for all weights and biases
+        dWf = np.zeros_like(self.Wf)
+        dWi = np.zeros_like(self.Wi)
+        dWc = np.zeros_like(self.Wc)
+        dWo = np.zeros_like(self.Wo)
+        dbf = np.zeros_like(self.bf)
+        dbi = np.zeros_like(self.bi)
+        dbc = np.zeros_like(self.bc)
+        dbo = np.zeros_like(self.bo)
+
+        dWy = np.zeros_like(self.Wy)
+        dby = np.zeros_like(self.by)
+
+        # Compute output layer gradients (if output layer is used)
+        # Here, output_tensor is assumed to be dL/dh (gradient w.r.t. last hidden state)
+        dh_next = output_tensor
+        dc_next = np.zeros_like(self.cell_state)
+
+        # Retrieve last used values from forward pass
+        c = self.cell_state
+        f = self.forget_gate
+        i = self.input_gate
+        g = self.cell_gate
+        o = self.output_gate
+        xh = self.input_tensor  # concatenated input
+
+        # Gradients w.r.t. output gate
+        do = dh_next * np.tanh(c)
+        do_raw = do * o * (1 - o)  # sigmoid derivative
+
+        # Gradients w.r.t. cell state
+        dc = dh_next * o * (1 - np.tanh(c) ** 2) + dc_next
+
+        # Gradients w.r.t. cell gate
+        dg = dc * i
+        dg_raw = dg * (1 - g**2)  # tanh derivative
+
+        # Gradients w.r.t. input gate
+        di = dc * g
+        di_raw = di * i * (1 - i)  # sigmoid derivative
+
+        # Gradients w.r.t. forget gate
+        df = dc * self.cell_state_tensor
+        df_raw = df * f * (1 - f)  # sigmoid derivative
+
+        # Gradients w.r.t. weights and biases
+        dWf += np.dot(df_raw, xh.T)
+        dWi += np.dot(di_raw, xh.T)
+        dWc += np.dot(dg_raw, xh.T)
+        dWo += np.dot(do_raw, xh.T)
+        dbf += df_raw
+        dbi += di_raw
+        dbc += dg_raw
+        dbo += do_raw
+
+        # Update weights and biases
+        self.Wf -= learning_rate * dWf
+        self.Wi -= learning_rate * dWi
+        self.Wc -= learning_rate * dWc
+        self.Wo -= learning_rate * dWo
+        self.bf -= learning_rate * dbf
+        self.bi -= learning_rate * dbi
+        self.bc -= learning_rate * dbc
+        self.bo -= learning_rate * dbo
+
+        # Output layer update (if used)
+        self.Wy -= learning_rate * dWy
+        self.by -= learning_rate * dby
+
 
 def main():
     lstm = LSTM(input_size=10, hidden_size=10, output_size=10)
