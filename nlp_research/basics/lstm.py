@@ -144,6 +144,9 @@ class LSTM:
         self.Wy -= learning_rate * dWy
         self.by -= learning_rate * dby
 
+    def predict(self, input_tensor):
+        return self.forward(input_tensor)
+
 
 def main():
     lstm = LSTM(input_size=10, hidden_size=10, output_size=10)
