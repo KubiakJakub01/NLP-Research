@@ -63,6 +63,16 @@ class RNN:
     def load(self, filename):
         data = np.load(filename)
         self.weights_ih = data['weights_ih']
+        self.weights_hh = data['weights_hh']
+        self.weights_ho = data['weights_ho']
+        self.bias_h = data['bias_h']
+        self.bias_o = data['bias_o']
+        self.hidden_state = np.zeros((self.hidden_size, 1))
+        self.output_state = np.zeros((self.output_size, 1))
+        self.output_error = None
+        self.output_delta = None
+        self.hidden_error = None
+        self.hidden_delta = None
 
 
 def main():
