@@ -1,6 +1,52 @@
 import numpy as np
 
 
+class Conv1D:
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+
+        self.weights = np.random.randn(out_channels, in_channels, kernel_size)
+        self.biases = np.random.randn(out_channels, 1)
+
+        self.input = None
+
+    def forward(self, input_tensor):
+        self.input = input_tensor
+        n_samples, _, in_length = input_tensor.shape
+
+        out_length = int((in_length - self.kernel_size + 2 * self.padding) / self.stride) + 1
+
+        padded_input = np.pad(
+            input_tensor,
+            pad_width=((0, 0), (0, 0), (self.padding, self.padding)),
+            mode='constant',
+            constant_values=0,
+        )
+
+        output_tensor = np.zeros((n_samples, self.out_channels, out_length))
+
+        for i in range(n_samples):
+            for f in range(self.out_channels):
+                for t in range(out_length):
+                    vert_start = t * self.stride
+                    vert_end = vert_start + self.kernel_size
+
+                    input_patch = padded_input[i, :, vert_start:vert_end]
+
+                    convolution_sum = np.sum(input_patch * self.weights[f])
+
+                    output_tensor[i, f, t] = convolution_sum + self.biases[f]
+
+        return output_tensor
+
+    def backward(self, output_tensor, learning_rate):
+        pass
+
+
 class Conv2D:  # pylint: disable=too-few-public-methods
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
         """
