@@ -34,3 +34,13 @@ def preprocess_receipt_image(image_path: str, output_path: str | None = None) ->
     if output_path:
         cv2.imwrite(output_path, cleaned)
     return cleaned
+
+
+def main():
+    image_path = 'receipt.jpg'
+    output_path = 'processed_receipt.jpg'
+    preprocess_receipt_image(image_path, output_path)
+
+
+if __name__ == '__main__':
+    main()
