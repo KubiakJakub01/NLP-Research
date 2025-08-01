@@ -39,6 +39,7 @@ librosa = "^0.10.1"
 soundfile = "^0.12.1"
 opencv-python = "^4.12.0.88"
 speechbrain = "^1.0.3"
+mamba-ssm = "^2.2.5"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "1.15.0"
