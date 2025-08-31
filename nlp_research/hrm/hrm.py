@@ -81,3 +81,21 @@ class HierarchicalReasoningModelBlock(nn.Module):
             hidden_states + self.mlp(hidden_states), variance_epsilon=self.norm_eps
         )
         return hidden_states
+
+
+class HierarchicalReasoningModelReasoningModule(nn.Module):
+    def __init__(self, layers: list[HierarchicalReasoningModelBlock]):
+        super().__init__()
+
+        self.layers = torch.nn.ModuleList(layers)
+
+    def forward(
+        self, hidden_states: torch.Tensor, input_injection: torch.Tensor, **kwargs
+    ) -> torch.Tensor:
+        # Input injection (add)
+        hidden_states = hidden_states + input_injection
+        # Layers
+        for layer in self.layers:
+            hidden_states = layer(hidden_states=hidden_states, **kwargs)
+
+        return hidden_states
