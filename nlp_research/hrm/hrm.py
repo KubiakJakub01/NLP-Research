@@ -1,10 +1,21 @@
+import math
 from dataclasses import dataclass
 
 import torch
 from pydantic import BaseModel
 from torch import nn
 
-from .models.layers import Attention, CosSin, SwiGLU, rms_norm
+from .models.common import trunc_normal_init_
+from .models.layers import (
+    Attention,
+    CastedEmbedding,
+    CastedLinear,
+    CosSin,
+    RotaryEmbedding,
+    SwiGLU,
+    rms_norm,
+)
+from .models.sparse_embedding import CastedSparseEmbedding
 
 
 @dataclass
@@ -99,3 +110,86 @@ class HierarchicalReasoningModelReasoningModule(nn.Module):
             hidden_states = layer(hidden_states=hidden_states, **kwargs)
 
         return hidden_states
+
+
+class HierarchicalReasoningModel_Inner(nn.Module):
+    def __init__(self, config: HierarchicalReasoningModelConfig) -> None:
+        super().__init__()
+        self.config = config
+        self.forward_dtype = getattr(torch, self.config.forward_dtype)
+
+        # I/O
+        self.embed_scale = math.sqrt(self.config.hidden_size)
+        embed_init_std = 1.0 / self.embed_scale
+
+        self.embed_tokens = CastedEmbedding(
+            self.config.vocab_size,
+            self.config.hidden_size,
+            init_std=embed_init_std,
+            cast_to=self.forward_dtype,
+        )
+        self.lm_head = CastedLinear(self.config.hidden_size, self.config.vocab_size, bias=False)
+        self.q_head = CastedLinear(self.config.hidden_size, 2, bias=True)
+
+        self.puzzle_emb_len = -(self.config.puzzle_emb_ndim // -self.config.hidden_size)  # ceil div
+        if self.config.puzzle_emb_ndim > 0:
+            # Zero init puzzle embeddings
+            self.puzzle_emb = CastedSparseEmbedding(
+                self.config.num_puzzle_identifiers,
+                self.config.puzzle_emb_ndim,
+                batch_size=self.config.batch_size,
+                init_std=0,
+                cast_to=self.forward_dtype,
+            )
+
+        # LM Blocks
+        if self.config.pos_encodings == 'rope':
+            self.rotary_emb = RotaryEmbedding(
+                dim=self.config.hidden_size // self.config.num_heads,
+                max_position_embeddings=self.config.seq_len + self.puzzle_emb_len,
+                base=self.config.rope_theta,
+            )
+        elif self.config.pos_encodings == 'learned':
+            self.embed_pos = CastedEmbedding(
+                self.config.seq_len + self.puzzle_emb_len,
+                self.config.hidden_size,
+                init_std=embed_init_std,
+                cast_to=self.forward_dtype,
+            )
+        else:
+            raise NotImplementedError()
+
+        # Reasoning Layers
+        self.H_level = HierarchicalReasoningModelReasoningModule(
+            layers=[
+                HierarchicalReasoningModelBlock(self.config) for _i in range(self.config.H_layers)
+            ]
+        )
+        self.L_level = HierarchicalReasoningModelReasoningModule(
+            layers=[
+                HierarchicalReasoningModelBlock(self.config) for _i in range(self.config.L_layers)
+            ]
+        )
+
+        # Initial states
+        self.H_init = nn.Buffer(
+            trunc_normal_init_(
+                torch.empty(self.config.hidden_size, dtype=self.forward_dtype), std=1
+            ),
+            persistent=True,
+        )
+        self.L_init = nn.Buffer(
+            trunc_normal_init_(
+                torch.empty(self.config.hidden_size, dtype=self.forward_dtype), std=1
+            ),
+            persistent=True,
+        )
+
+        # Q head special init
+        # Init Q to (almost) zero for faster learning during bootstrapping
+        with torch.inference_mode():
+            self.q_head.weight.zero_()
+            self.q_head.bias.fill_(-5)  # type: ignore
+
+    def forward(self):
+        pass
