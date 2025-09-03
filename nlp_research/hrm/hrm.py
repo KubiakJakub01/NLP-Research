@@ -6,17 +6,17 @@ import torch.nn.functional as F
 from pydantic import BaseModel
 from torch import nn
 
-from .models.common import trunc_normal_init_
-from .models.layers import (
+from .models import (
     Attention,
     CastedEmbedding,
     CastedLinear,
+    CastedSparseEmbedding,
     CosSin,
     RotaryEmbedding,
     SwiGLU,
     rms_norm,
+    trunc_normal_init_,
 )
-from .models.sparse_embedding import CastedSparseEmbedding
 
 
 @dataclass
