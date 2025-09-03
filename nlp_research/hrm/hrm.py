@@ -2,6 +2,7 @@ import math
 from dataclasses import dataclass
 
 import torch
+import torch.nn.functional as F
 from pydantic import BaseModel
 from torch import nn
 
@@ -190,6 +191,36 @@ class HierarchicalReasoningModel_Inner(nn.Module):
         with torch.inference_mode():
             self.q_head.weight.zero_()
             self.q_head.bias.fill_(-5)  # type: ignore
+
+    def _input_embeddings(self, input_: torch.Tensor, puzzle_identifiers: torch.Tensor):
+        # Token embedding
+        embedding = self.embed_tokens(input_.to(torch.int32))
+
+        # Puzzle embeddings
+        if self.config.puzzle_emb_ndim > 0:
+            puzzle_embedding = self.puzzle_emb(puzzle_identifiers)
+
+            pad_count = self.puzzle_emb_len * self.config.hidden_size - puzzle_embedding.shape[-1]
+            if pad_count > 0:
+                puzzle_embedding = F.pad(puzzle_embedding, (0, pad_count))
+
+            embedding = torch.cat(
+                (
+                    puzzle_embedding.view(-1, self.puzzle_emb_len, self.config.hidden_size),
+                    embedding,
+                ),
+                dim=-2,
+            )
+
+        # Position embeddings
+        if self.config.pos_encodings == 'learned':
+            # scale by 1/sqrt(2) to maintain forward variance
+            embedding = 0.707106781 * (
+                embedding + self.embed_pos.embedding_weight.to(self.forward_dtype)
+            )
+
+        # Scale
+        return self.embed_scale * embedding
 
     def forward(self):
         pass
