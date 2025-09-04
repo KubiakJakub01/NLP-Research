@@ -240,3 +240,9 @@ class HierarchicalReasoningModel_Inner(nn.Module):
                 dtype=self.forward_dtype,
             ),
         )
+
+    def reset_carry(self, reset_flag: torch.Tensor, carry: HierarchicalReasoningModel_InnerCarry):
+        return HierarchicalReasoningModel_InnerCarry(
+            z_H=torch.where(reset_flag.view(-1, 1, 1), self.H_init, carry.z_H),
+            z_L=torch.where(reset_flag.view(-1, 1, 1), self.L_init, carry.z_L),
+        )
