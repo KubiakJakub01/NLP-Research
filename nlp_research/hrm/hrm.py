@@ -224,3 +224,19 @@ class HierarchicalReasoningModel_Inner(nn.Module):
 
     def forward(self):
         pass
+
+    def empty_carry(self, batch_size: int):
+        return HierarchicalReasoningModel_InnerCarry(
+            z_H=torch.empty(
+                batch_size,
+                self.config.seq_len + self.puzzle_emb_len,
+                self.config.hidden_size,
+                dtype=self.forward_dtype,
+            ),
+            z_L=torch.empty(
+                batch_size,
+                self.config.seq_len + self.puzzle_emb_len,
+                self.config.hidden_size,
+                dtype=self.forward_dtype,
+            ),
+        )
