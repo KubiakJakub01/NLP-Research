@@ -20,14 +20,14 @@ from .models import (
 
 
 @dataclass
-class HierarchicalReasoningModel_InnerCarry:
+class HierarchicalReasoningModelInnerCarry:
     z_H: torch.Tensor
     z_L: torch.Tensor
 
 
 @dataclass
 class HierarchicalReasoningModel_Carry:
-    inner_carry: HierarchicalReasoningModel_InnerCarry
+    inner_carry: HierarchicalReasoningModelInnerCarry
 
     steps: torch.Tensor
     halted: torch.Tensor
@@ -113,7 +113,7 @@ class HierarchicalReasoningModelReasoningModule(nn.Module):
         return hidden_states
 
 
-class HierarchicalReasoningModel_Inner(nn.Module):
+class HierarchicalReasoningModelInner(nn.Module):
     def __init__(self, config: HierarchicalReasoningModelConfig) -> None:
         super().__init__()
         self.config = config
@@ -222,11 +222,49 @@ class HierarchicalReasoningModel_Inner(nn.Module):
         # Scale
         return self.embed_scale * embedding
 
-    def forward(self):
-        pass
+    def forward(
+        self, carry: HierarchicalReasoningModelInnerCarry, batch: dict[str, torch.Tensor]
+    ) -> tuple[
+        HierarchicalReasoningModelInnerCarry, torch.Tensor, tuple[torch.Tensor, torch.Tensor]
+    ]:
+        seq_info = {
+            'cos_sin': self.rotary_emb() if hasattr(self, 'rotary_emb') else None,
+        }
+
+        # Input encoding
+        input_embeddings = self._input_embeddings(batch['inputs'], batch['puzzle_identifiers'])
+
+        # Forward iterations
+        with torch.inference_mode():
+            z_H, z_L = carry.z_H, carry.z_L
+
+            for _H_step in range(self.config.H_cycles):
+                for _L_step in range(self.config.L_cycles):
+                    if _H_step != self.config.H_cycles - 1 or _L_step != self.config.L_cycles - 1:
+                        z_L = self.L_level(z_L, z_H + input_embeddings, **seq_info)
+
+                if _H_step != self.config.H_cycles - 1:
+                    z_H = self.H_level(z_H, z_L, **seq_info)
+
+        assert not z_H.requires_grad and not z_L.requires_grad
+
+        # 1-step grad
+        z_L = self.L_level(z_L, z_H + input_embeddings, **seq_info)
+        z_H = self.H_level(z_H, z_L, **seq_info)
+
+        # LM Outputs
+        new_carry = HierarchicalReasoningModelInnerCarry(
+            z_H=z_H.detach(), z_L=z_L.detach()
+        )  # New carry no grad
+        output = self.lm_head(z_H)[:, self.puzzle_emb_len :]
+
+        # Q head
+        q_logits = self.q_head(z_H[:, 0]).to(torch.float32)
+
+        return new_carry, output, (q_logits[..., 0], q_logits[..., 1])
 
     def empty_carry(self, batch_size: int):
-        return HierarchicalReasoningModel_InnerCarry(
+        return HierarchicalReasoningModelInnerCarry(
             z_H=torch.empty(
                 batch_size,
                 self.config.seq_len + self.puzzle_emb_len,
@@ -241,8 +279,8 @@ class HierarchicalReasoningModel_Inner(nn.Module):
             ),
         )
 
-    def reset_carry(self, reset_flag: torch.Tensor, carry: HierarchicalReasoningModel_InnerCarry):
-        return HierarchicalReasoningModel_InnerCarry(
+    def reset_carry(self, reset_flag: torch.Tensor, carry: HierarchicalReasoningModelInnerCarry):
+        return HierarchicalReasoningModelInnerCarry(
             z_H=torch.where(reset_flag.view(-1, 1, 1), self.H_init, carry.z_H),
             z_L=torch.where(reset_flag.view(-1, 1, 1), self.L_init, carry.z_L),
         )
