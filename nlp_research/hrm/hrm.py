@@ -284,3 +284,19 @@ class HierarchicalReasoningModelInner(nn.Module):
             z_H=torch.where(reset_flag.view(-1, 1, 1), self.H_init, carry.z_H),
             z_L=torch.where(reset_flag.view(-1, 1, 1), self.L_init, carry.z_L),
         )
+
+
+class HierarchicalReasoningModel(nn.Module):
+    """ACT wrapper."""
+
+    def __init__(self, config_dict: dict):
+        super().__init__()
+        self.config = HierarchicalReasoningModelConfig(**config_dict)
+        self.inner = HierarchicalReasoningModelInner(self.config)
+
+    @property
+    def puzzle_emb(self):
+        return self.inner.puzzle_emb
+
+    def forward(self, x):
+        return x
