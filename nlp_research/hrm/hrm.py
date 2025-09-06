@@ -26,7 +26,7 @@ class HierarchicalReasoningModelInnerCarry:
 
 
 @dataclass
-class HierarchicalReasoningModel_Carry:
+class HierarchicalReasoningModelCarry:
     inner_carry: HierarchicalReasoningModelInnerCarry
 
     steps: torch.Tensor
@@ -300,3 +300,15 @@ class HierarchicalReasoningModel(nn.Module):
 
     def forward(self, x):
         return x
+
+    def initial_carry(self, batch: dict[str, torch.Tensor]):
+        batch_size = batch['inputs'].shape[0]
+
+        return HierarchicalReasoningModelCarry(
+            inner_carry=self.inner.empty_carry(
+                batch_size
+            ),  # Empty is expected, it will be reseted in first pass as all sequences are halted.
+            steps=torch.zeros((batch_size,), dtype=torch.int32),
+            halted=torch.ones((batch_size,), dtype=torch.bool),  # Default to halted
+            current_data={k: torch.empty_like(v) for k, v in batch.items()},
+        )
