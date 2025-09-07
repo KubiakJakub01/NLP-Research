@@ -298,8 +298,70 @@ class HierarchicalReasoningModel(nn.Module):
     def puzzle_emb(self):
         return self.inner.puzzle_emb
 
-    def forward(self, x):
-        return x
+    def forward(
+        self, carry: HierarchicalReasoningModelCarry, batch: dict[str, torch.Tensor]
+    ) -> tuple[HierarchicalReasoningModelCarry, dict[str, torch.Tensor]]:
+        # Update data, carry (removing halted sequences)
+        new_inner_carry = self.inner.reset_carry(carry.halted, carry.inner_carry)
+
+        new_steps = torch.where(carry.halted, 0, carry.steps)
+
+        new_current_data = {
+            k: torch.where(carry.halted.view((-1,) + (1,) * (batch[k].ndim - 1)), batch[k], v)
+            for k, v in carry.current_data.items()
+        }
+
+        # Forward inner model
+        new_inner_carry, logits, (q_halt_logits, q_continue_logits) = self.inner(
+            new_inner_carry, new_current_data
+        )
+
+        outputs = {
+            'logits': logits,
+            'q_halt_logits': q_halt_logits,
+            'q_continue_logits': q_continue_logits,
+        }
+
+        with torch.inference_mode():
+            # Step
+            new_steps = new_steps + 1
+            is_last_step = new_steps >= self.config.halt_max_steps
+
+            halted = is_last_step
+
+            # if training, and ACT is enabled
+            if self.training and (self.config.halt_max_steps > 1):
+                # Halt signal
+                # NOTE: During evaluation, always use max steps,
+                # this is to guarantee the same halting steps inside a batch for batching purposes
+                halted = halted | (q_halt_logits > q_continue_logits)
+
+                # Exploration
+                min_halt_steps = (
+                    torch.rand_like(q_halt_logits) < self.config.halt_exploration_prob
+                ) * torch.randint_like(new_steps, low=2, high=self.config.halt_max_steps + 1)
+
+                halted = halted & (new_steps >= min_halt_steps)
+
+                # Compute target Q
+                # NOTE: No replay buffer and target networks for computing target Q-value.
+                # As batch_size is large, there're many parallel envs.
+                # Similar concept as PQN https://arxiv.org/abs/2407.04811
+                next_q_halt_logits, next_q_continue_logits = self.inner(
+                    new_inner_carry, new_current_data
+                )[-1]
+
+                outputs['target_q_continue'] = torch.sigmoid(
+                    torch.where(
+                        is_last_step,
+                        next_q_halt_logits,
+                        torch.maximum(next_q_halt_logits, next_q_continue_logits),
+                    )
+                )
+
+        return HierarchicalReasoningModelCarry(
+            new_inner_carry, new_steps, halted, new_current_data
+        ), outputs
 
     def initial_carry(self, batch: dict[str, torch.Tensor]):
         batch_size = batch['inputs'].shape[0]
