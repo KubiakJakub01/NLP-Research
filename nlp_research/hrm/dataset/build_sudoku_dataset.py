@@ -30,7 +30,6 @@ def shuffle_sudoku(board: np.ndarray, solution: np.ndarray):
     transpose_flag = np.random.rand() < 0.5
 
     # Generate a valid row permutation:
-    # - Shuffle the 3 bands (each band = 3 rows) and for each band, shuffle its 3 rows.
     bands = np.random.permutation(3)
     row_perm = np.concatenate([b * 3 + np.random.permutation(3) for b in bands])
 
@@ -38,9 +37,7 @@ def shuffle_sudoku(board: np.ndarray, solution: np.ndarray):
     stacks = np.random.permutation(3)
     col_perm = np.concatenate([s * 3 + np.random.permutation(3) for s in stacks])
 
-    # Build an 81->81 mapping. For each new cell at (i, j)
-    # (row index = i // 9, col index = i % 9),
-    # its value comes from old row = row_perm[i//9] and old col = col_perm[i%9].
+    # Build an 81->81 mapping.
     mapping = np.array([row_perm[i // 9] * 9 + col_perm[i % 9] for i in range(81)])
 
     def apply_transformation(x: np.ndarray) -> np.ndarray:
