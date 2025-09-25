@@ -16,7 +16,7 @@ cli = ArgParser()
 
 
 class DataProcessConfig(BaseModel):
-    dataset_dirs: list[str] = ['data/chess/downloads']
+    dataset_dirs: list[str] = ['data/chess/downloads/lichess_db_standard']
     output_dir: str = 'data/chess-1000'
     seed: int = 42
     train_eval_split_ratio: float = 0.95
