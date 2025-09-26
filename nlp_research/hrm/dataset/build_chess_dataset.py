@@ -10,6 +10,7 @@ from argdantic import ArgParser
 from pydantic import BaseModel
 from tqdm import tqdm
 
+from ...utils import log_info
 from .common import PuzzleDatasetMetadata
 
 cli = ArgParser()
@@ -119,7 +120,7 @@ def convert_dataset(config: DataProcessConfig):
                 if file.endswith('.pgn.zst'):
                     pgn_files.append(os.path.join(root, file))
 
-    print(f'Found {len(pgn_files)} PGN files.')
+    log_info(f'Found {len(pgn_files)} PGN files.')
 
     all_games = []
     for pgn_file in tqdm(pgn_files, desc='Processing PGN files'):
@@ -189,7 +190,7 @@ def convert_dataset(config: DataProcessConfig):
         ) as f:
             json.dump(metadata.model_dump(), f)
 
-    print('Dataset conversion finished.')
+    log_info('Dataset conversion finished.')
 
 
 @cli.command(singleton=True)
