@@ -10,6 +10,7 @@ import numpy as np
 from argdantic import ArgParser
 from pydantic import BaseModel
 
+from ...utils import log_info, log_warning
 from .common import PuzzleDatasetMetadata, dihedral_transform
 
 cli = ArgParser()
@@ -164,7 +165,7 @@ def convert_single_arc_puzzle(
                 break
 
         if len(group) < aug_count + 1:
-            print(f'[Puzzle {name}] augmentation not full, only {len(group)}')
+            log_warning(f'[Puzzle {name}] augmentation not full, only {len(group)}')
 
     # Append
     for dest in dests:
@@ -219,7 +220,7 @@ def load_puzzles_arcagi(
                 )
                 total_puzzles += 1
 
-    print(f'[{dataset_path}] total puzzles: {total_puzzles}')
+    log_info(f'[{dataset_path}] total puzzles: {total_puzzles}')
 
 
 def convert_dataset(config: DataProcessConfig):
@@ -241,7 +242,7 @@ def convert_dataset(config: DataProcessConfig):
                         identifier_map[puzzle.id] = num_identifiers
                         num_identifiers += 1
 
-    print(f'Total puzzle IDs (including <blank>): {num_identifiers}')
+    log_info(f'Total puzzle IDs (including <blank>): {num_identifiers}')
 
     # Save
     for split_name, split in data.items():
