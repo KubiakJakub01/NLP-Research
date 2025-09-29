@@ -85,6 +85,7 @@ def np_grid_to_seq(inp: np.ndarray, out: np.ndarray):
 def process_pgn_file(pgn_path: str, max_games: int):
     examples = []
     games_count = 0
+    log_info(f'Processing {pgn_path}')
     with open(pgn_path, 'rb') as f:
         dctx = zstandard.ZstdDecompressor()
         with dctx.stream_reader(f) as reader:
