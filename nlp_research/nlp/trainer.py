@@ -1,4 +1,5 @@
 """Class with basic trainer class for NLP models"""
+
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
@@ -76,7 +77,7 @@ class NLPTrainer(Trainer):
         if self.args.local_rank in [-1, 0]:
             self.log_history.to_csv(f'{output_dir}/log_history.csv')
 
-    def _save(self, output_dir: str) -> None:
+    def _save_trainer_state(self, output_dir: str) -> None:
         """Save model and metrics for NLP models"""
         self._save_model(output_dir)
         self._save_metrics(output_dir)
