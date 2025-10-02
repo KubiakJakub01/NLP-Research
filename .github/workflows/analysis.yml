@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
       - name: Run ruff
-        run: uv run ruff nlp_research
+        run: uv run ruff check nlp_research
 
   run-mypy:
     runs-on: ubuntu-latest
