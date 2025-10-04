@@ -1,6 +1,7 @@
 """Module with functions for decoding the output of a neural network."""
+
 import torch
-from transformers import top_k_top_p_filtering
+from transformers import top_k_top_p_filtering  # pylint: disable=no-name-in-module
 
 
 def gready_decode(model, src, src_mask, max_len, start_symbol, device):
