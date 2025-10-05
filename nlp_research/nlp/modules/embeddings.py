@@ -1,4 +1,5 @@
 """Module with different embeddings"""
+
 import math
 
 import torch
