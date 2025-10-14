@@ -1,4 +1,5 @@
 """Adopted from https://github.com/coqui-ai/TTS/blob/dev/TTS/tts/layers/glow_tts/transformer.py"""
+
 import math
 
 import torch
