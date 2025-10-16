@@ -1,4 +1,5 @@
 """Module for whisper voice activity detection (VAD) using the WhisperX"""
+
 import argparse
 import json
 from pathlib import Path
