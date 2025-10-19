@@ -64,7 +64,7 @@ def download(
     data_dir.mkdir(exist_ok=True, parents=True)
 
     def process(example):
-        outfile_path = str(data_dir / f"{example['ytid']}.wav")
+        outfile_path = str(data_dir / f'{example["ytid"]}.wav')
         status = True
         if not os.path.exists(outfile_path):
             status = False
