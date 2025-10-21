@@ -1,4 +1,5 @@
 """Implementation of GPT model."""
+
 import torch
 import torch.nn as nn
 from transformers import GPT2Model
@@ -7,7 +8,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttenti
 from ..hparams import GPTHparams
 
 
-class GPT2LMHeadModel(GPT2Model):
+class GPT2LMHeadModel(GPT2Model):  # pylint: disable=abstract-method
     """GPT2 with language modeling head."""
 
     def __init__(self, config: GPTHparams):
@@ -39,6 +40,7 @@ class GPT2LMHeadModel(GPT2Model):
         return_dict=None,
         **kwargs,
     ):
+        # pylint: disable=arguments-differ
         """Forward pass of GPT2LMHeadModel."""
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
@@ -83,7 +85,7 @@ class GPT2LMHeadModel(GPT2Model):
         )
 
 
-class GPT2LMHeadModelWithLatent(GPT2Model):
+class GPT2LMHeadModelWithLatent(GPT2Model):  # pylint: disable=abstract-method
     """GPT2 with language modeling head and latent vector."""
 
     def __init__(self, config: GPTHparams):
@@ -102,7 +104,7 @@ class GPT2LMHeadModelWithLatent(GPT2Model):
         """Set output embeddings."""
         self.lm_head = new_embeddings
 
-    def forward(
+    def forward(  # pylint: disable=arguments-differ
         self,
         input_ids=None,
         past_key_values=None,
