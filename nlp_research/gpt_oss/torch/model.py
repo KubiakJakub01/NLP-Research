@@ -140,7 +140,14 @@ class RotaryEmbedding(torch.nn.Module):
         return query, key
 
 
-def sdpa(Q, K, V, S, sm_scale, sliding_window=0):
+def sdpa(
+    Q: torch.Tensor,
+    K: torch.Tensor,
+    V: torch.Tensor,
+    S: torch.Tensor,
+    sm_scale: float,
+    sliding_window: int = 0,
+) -> torch.Tensor:
     # sliding_window == 0 means no sliding window
     n_tokens, n_heads, q_mult, d_head = Q.shape
     assert K.shape == (n_tokens, n_heads, d_head)
