@@ -330,3 +330,21 @@ class MLPBlock(torch.nn.Module):
         t = torch.einsum('bec,be->bc', t, expert_weights)
 
         return x + t
+
+
+class TransformerBlock(torch.nn.Module):
+    def __init__(
+        self,
+        config: ModelConfig,
+        layer_idx: int,
+        device: torch.device | None = None,
+    ):
+        super().__init__()
+        self.layer_idx = layer_idx
+        self.attn = AttentionBlock(config, layer_idx, device)
+        self.mlp = MLPBlock(config, device)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.attn(x)
+        x = self.mlp(x)
+        return x
