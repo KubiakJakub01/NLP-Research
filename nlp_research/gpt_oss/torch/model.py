@@ -1,8 +1,13 @@
+import json
 import math
+import os
 from dataclasses import dataclass
 
 import torch
 import torch.distributed as dist
+
+from ...utils import log_info
+from .weights import Checkpoint
 
 
 @dataclass
@@ -348,3 +353,87 @@ class TransformerBlock(torch.nn.Module):
         x = self.attn(x)
         x = self.mlp(x)
         return x
+
+
+class Transformer(torch.nn.Module):
+    def __init__(
+        self,
+        config: ModelConfig,
+        device: torch.device | None = None,
+    ):
+        super().__init__()
+        self.embedding = torch.nn.Embedding(
+            config.vocab_size, config.hidden_size, device=device, dtype=torch.bfloat16
+        )
+        self.block = torch.nn.ModuleList(
+            [
+                TransformerBlock(config, layer_idx, device)
+                for layer_idx in range(config.num_hidden_layers)
+            ]
+        )
+        self.norm = RMSNorm(config.hidden_size, device=device)
+        self.unembedding = torch.nn.Linear(
+            config.hidden_size,
+            config.vocab_size,
+            bias=False,
+            device=device,
+            dtype=torch.bfloat16,
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.embedding(x)
+        for block in self.block:
+            x = block(x)
+        x = self.norm(x)
+        x = self.unembedding(x)
+        return x
+
+    @staticmethod
+    def from_checkpoint(path: str, device: str | torch.device = 'cuda') -> 'Transformer':
+        if not isinstance(device, torch.device):
+            device = torch.device(device)
+
+        config_path = os.path.join(path, 'config.json')
+        with open(config_path, encoding='utf-8') as f:
+            json_config = json.load(f)
+            config = ModelConfig(**json_config)
+
+        model = Transformer(
+            config=config,
+            device=device,
+        )
+        model.eval()
+
+        # Load weights
+        my_rank = dist.get_rank() if dist.is_initialized() else 0
+        world_size = dist.get_world_size() if dist.is_initialized() else 1
+        per_rank_intermediate_size = config.intermediate_size // world_size
+
+        checkpoint = Checkpoint(path, device)
+
+        for name, param in model.named_parameters():
+            loaded_tensor = checkpoint.get(name)
+
+            # Note: it would be more efficient to do sharding before upcasting from MXFP4,
+            # but for simplicity we do it after.
+            if 'mlp1' in name:  # both weight and bias
+                loaded_tensor = loaded_tensor[
+                    :,
+                    my_rank * 2 * per_rank_intermediate_size : (my_rank + 1)
+                    * 2
+                    * per_rank_intermediate_size,
+                    ...,
+                ]
+            elif 'mlp2_weight' in name:  # only weight
+                loaded_tensor = loaded_tensor[
+                    ...,
+                    my_rank * per_rank_intermediate_size : (my_rank + 1)
+                    * per_rank_intermediate_size,
+                ]
+            try:
+                param.data.copy_(loaded_tensor)
+            except:
+                log_info(f'{name=} {param.data.shape=} {loaded_tensor.shape=}')
+                raise
+
+        return model
