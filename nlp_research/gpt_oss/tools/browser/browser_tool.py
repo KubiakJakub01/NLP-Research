@@ -9,6 +9,7 @@ from collections.abc import AsyncIterator, Callable
 from typing import Any, ParamSpec
 from urllib.parse import quote
 
+import pydantic
 import structlog
 import tiktoken
 from openai_harmony import Message, TextContent
@@ -219,3 +220,45 @@ async def run_find_in_page(
         snippets={str(i): snip for i, snip in enumerate(snippets)},
     )
     return result_page
+
+
+class SimpleBrowserState(pydantic.BaseModel):
+    # maps page url to page contents
+    pages: dict[str, PageContents] = pydantic.Field(default_factory=dict)
+    # a sequential list of page urls
+    page_stack: list[str] = pydantic.Field(default_factory=list)
+
+    @property
+    def current_cursor(self) -> int:
+        return len(self.page_stack) - 1
+
+    def add_page(self, page: PageContents) -> None:
+        self.pages[page.url] = page
+        self.page_stack.append(page.url)  # pylint: disable=no-member
+
+    def get_page(self, cursor: int = -1) -> PageContents:
+        if self.current_cursor < 0:
+            raise ToolUsageError('No pages to access!')
+        if cursor in (-1, self.current_cursor):
+            return self.pages[self.page_stack[-1]]
+        try:
+            page_url = self.page_stack[cursor]
+        except TypeError as e:
+            raise ToolUsageError(
+                f'`cursor` should be an integer, not `{type(cursor).__name__}`'
+            ) from e
+        except IndexError as e:
+            raise ToolUsageError(
+                f'Cursor `{cursor}` is out of range. '
+                f'Available cursor indices: [0 - {self.current_cursor}].'
+            ) from e
+        return self.pages[page_url]
+
+    def get_page_by_url(self, url: str) -> PageContents | None:
+        if url in self.pages:
+            return self.pages[url]
+        return None
+
+    def pop_page_stack(self) -> None:
+        assert self.current_cursor >= 0, 'No page to pop!'
+        self.page_stack.pop()  # pylint: disable=no-member
