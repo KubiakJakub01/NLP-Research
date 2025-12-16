@@ -14,6 +14,7 @@ import structlog
 import tiktoken
 from openai_harmony import Message, TextContent
 
+from ..tool import Tool
 from .page_contents import Extract, PageContents
 
 logger = structlog.stdlib.get_logger(component=__name__)
@@ -262,3 +263,36 @@ class SimpleBrowserState(pydantic.BaseModel):
     def pop_page_stack(self) -> None:
         assert self.current_cursor >= 0, 'No page to pop!'
         self.page_stack.pop()  # pylint: disable=no-member
+
+
+class SimpleBrowserTool(Tool):
+    def __init__(
+        self,
+        backend,
+        encoding_name: str = ENC_NAME,
+        max_search_results: int = 20,
+        tool_state: dict[str, Any] | None = None,
+        view_tokens: int = 1024,
+        name: str = 'browser',
+    ):
+        assert name == 'browser'
+        self.backend = backend
+        if tool_state is None:
+            self.tool_state = SimpleBrowserState()
+        else:
+            self.tool_state = SimpleBrowserState.model_validate(tool_state)
+
+        self.encoding_name = encoding_name
+        self.max_search_results = max_search_results
+        self.view_tokens = view_tokens
+
+    def get_tool_state(self) -> dict[str, Any]:
+        return {'tool_state': self.tool_state.model_dump()}
+
+    @classmethod
+    def get_tool_name(cls) -> str:
+        return 'browser'
+
+    @property
+    def name(self) -> str:
+        return self.get_tool_name()
