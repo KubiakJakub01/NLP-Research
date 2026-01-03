@@ -3,31 +3,15 @@ This repository serves as a hub for various Natural Language Processing (NLP) re
 
 ## Installation
 
-To install and set up the project, you can use the Python Poetry package manager. Follow the steps below:
+To install and set up the project, you can use the `uv` package manager. Follow the steps below:
 
 1. Make sure you have Python installed on your system. You can download it from the official Python website: [python.org](https://www.python.org/downloads/).
 
-2. Install Poetry by running the following command in your terminal or command prompt:
+2. Install `uv` by running the following command in your terminal or command prompt:
 
    ```shell
-   curl -sSL https://install.python-poetry.org | python3 -
+   curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
-
-   Then, export the Poetry binary directory to your system's PATH:
-   ```shell
-   export PATH="$HOME/.local/bin:$PATH"
-    ```
-   Optionaly you can add this line to your `~/.bashrc`.
-
-   Then you can run the following command to apply the changes:
-   ```shell
-   source ~/.bashrc
-   ```
-
-   Also you can install `poetry-exec-plugin` to enable running scripts from the `pyproject.toml` file:
-   ```shell
-   poetry self add poetry-exec-plugin
-   ```
 
 3. Clone the repository to your local machine:
 
@@ -36,20 +20,20 @@ To install and set up the project, you can use the Python Poetry package manager
    cd NLP-Research
     ```
 
-4. Install the project dependencies using Poetry:
+4. Install the project dependencies using `uv`:
 
    ```shell
-   poetry install --with dev
+   uv sync
     ```
 
 5. To activate the virtual environment, run the following command:
 
    ```shell
-   source $(poetry env info --path)/bin/activate
+   source .venv/bin/activate
     ```
-    Optionaly you can add the following line to your .bashrc:
+    Optionally you can add the following line to your .bashrc:
     ```shell
-    alias activate="source $(poetry env info --path)/bin/activate"
+    alias activate="source .venv/bin/activate"
     ```
     Then you can activate the virtual environment by running:
     ```shell
